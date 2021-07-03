@@ -9,7 +9,16 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func darwinArm64Info(ctx context.Context) ([]cpu.InfoStat, error) {
+func darwinArm64InfoWithContext(ctx context.Context) ([]cpu.InfoStat, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		return darwinArm64Info()
+	}
+}
+
+func darwinArm64Info() ([]cpu.InfoStat, error) {
 	var ret []cpu.InfoStat
 
 	c := cpu.InfoStat{}

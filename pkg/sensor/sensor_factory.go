@@ -12,16 +12,16 @@ var sensorLogger logger.Logger = logger.NewLogger("./sensor")
 func CreateSensor(sensorType string) (ISensor, error) {
 
 	switch sensorType {
-	case "CPU_TEMP":
+	case tempSensor:
 		sensorLogger.Info("Getting temp sensor measurements.")
 		return CreateTempSensor(), nil
-	case "CPU_USAGE":
+	case usageSensor:
 		sensorLogger.Info("Getting usage sensor measurements.")
 		return CreateUsageSensor(), nil
-	case "MEMORY_USAGE":
+	case memorySensor:
 		sensorLogger.Info("Getting memory sensor measurements.")
 		return CreateMemorySensor(), nil
 	}
 
-	return nil, fmt.Errorf("Error in getting sensor type.")
+	return nil, fmt.Errorf("error in getting sensor type")
 }

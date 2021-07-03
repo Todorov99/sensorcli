@@ -1,6 +1,7 @@
 package sensor
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/shirou/gopsutil/mem"
@@ -8,19 +9,6 @@ import (
 )
 
 const (
-	totalBytesName     string = "memoryTotalBytes"
-	availableBytesName string = "memoryAvailableBytes"
-	usedBytesName      string = "memoryUsedBytes"
-	usedPersentName    string = "memoryUsedPercent"
-
-	byteUnit    string = "Byte"
-	percentUnit string = "%"
-
-	totalBytesDescription     string = "Memory total Bytes"
-	availableBytesDescription string = "Memory available Bytes"
-	usedBytesDescription      string = "Memory used Bytes"
-	usedPercentDescription    string = "Memory used percent"
-
 	memorySensor string = "MEMORY_USAGE"
 )
 
@@ -31,9 +19,8 @@ func CreateMemorySensor() ISensor {
 	return &cpuMemorySensor{}
 }
 
-func (memoryS *cpuMemorySensor) GetSensorData(arguments ...string) ([]string, error) {
-
-	memoryUsageData, err := getMemoryUsageData(arguments[1])
+func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, arguments ...string) ([]string, error) {
+	memoryUsageData, err := getMemoryUsageData(ctx, arguments[1])
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +32,11 @@ func (memoryS *cpuMemorySensor) Validate(arguments ...string) error {
 	return util.ValidateFormat(arguments[0])
 }
 
-func getMemoryUsageData(format string) ([]string, error) {
+func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
 
 	var memoryData []string
 
-	memoryUsageValues, err := getMemoryUsageValues()
+	memoryUsageValues, err := getMemoryUsageValues(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +59,9 @@ func getMemoryUsageData(format string) ([]string, error) {
 	return memoryData, nil
 }
 
-func getMemoryUsageValues() ([]string, error) {
+func getMemoryUsageValues(ctx context.Context) ([]string, error) {
 
-	memory, err := mem.VirtualMemory()
+	memory, err := mem.VirtualMemoryWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -12,20 +12,6 @@ import (
 )
 
 const (
-	cpuUsageName        string = "cpuUsagePercent"
-	cpuCoresCountName   string = "cpuCoresCountName"
-	cpuFrequencyMHzName string = "cpuFrequencyMHz"
-
-	cpuUsageUnit     string = "%"
-	cpuCoresUnit     string = "count"
-	cpuFrequencyUnit string = "MHz"
-
-	coresDescription     string = "CPU cores count"
-	usageDescription     string = "CPU usage percent"
-	frequencyDescription string = "CPU frequency MHz"
-
-	invalidFlagError string = "Invalid flag."
-
 	usageSensor string = "CPU_USAGE"
 )
 
@@ -36,9 +22,9 @@ func CreateUsageSensor() ISensor {
 	return &cpuUsageSensor{}
 }
 
-func (usageS *cpuUsageSensor) GetSensorData(arguments ...string) ([]string, error) {
+func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, arguments ...string) ([]string, error) {
 
-	cpuUsage, err := getUsageMeasurements(arguments[1])
+	cpuUsage, err := getUsageMeasurements(ctx, arguments[1])
 
 	if err != nil {
 		return nil, err
@@ -51,7 +37,7 @@ func (usageS *cpuUsageSensor) Validate(arguments ...string) error {
 	return util.ValidateFormat(arguments[0])
 }
 
-func getUsageMeasurements(format string) ([]string, error) {
+func getUsageMeasurements(ctx context.Context, format string) ([]string, error) {
 	var usageData []string
 
 	deviceID, err := getDeviceID()
@@ -64,7 +50,7 @@ func getUsageMeasurements(format string) ([]string, error) {
 		return nil, err
 	}
 
-	cpuInfo, err := getCPUUsageInfo()
+	cpuInfo, err := getCPUUsageInfo(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +63,12 @@ func getUsageMeasurements(format string) ([]string, error) {
 	return usageData, nil
 }
 
-func getCPUCoresAndFrequency() (string, string, error) {
+func getCPUCoresAndFrequency(ctx context.Context) (string, string, error) {
 	var cpuInfo []cpu.InfoStat
 	var err error
 
 	if runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
-		cpuInfo, err = darwinArm64Info(context.Background())
+		cpuInfo, err = darwinArm64InfoWithContext(ctx)
 		if err != nil {
 			return "", "", fmt.Errorf("error getting cpu cores and frequency on darwin arm64: %w", err)
 		}
@@ -90,7 +76,7 @@ func getCPUCoresAndFrequency() (string, string, error) {
 		return strconv.FormatInt(int64(cpuInfo[0].Cores), 10), strconv.FormatFloat(cpuInfo[0].Mhz, 'f', 2, 64), nil
 	}
 
-	cpuInfo, err = cpu.Info()
+	cpuInfo, err = cpu.InfoWithContext(ctx)
 	if err != nil {
 		return "", "", fmt.Errorf("error with getting cpu cores and frequency: %w", err)
 	}
@@ -98,8 +84,8 @@ func getCPUCoresAndFrequency() (string, string, error) {
 	return strconv.FormatInt(int64(cpuInfo[0].Cores), 10), strconv.FormatFloat(cpuInfo[0].Mhz, 'f', 2, 64), nil
 }
 
-func getUsedPercent() (string, error) {
-	cpuUsedPercentage, err := cpu.Percent(time.Second, false)
+func getUsedPercent(ctx context.Context) (string, error) {
+	cpuUsedPercentage, err := cpu.PercentWithContext(ctx, time.Second, false)
 	if err != nil {
 		return "", fmt.Errorf("error in getting used cpu percent")
 	}
@@ -109,13 +95,13 @@ func getUsedPercent() (string, error) {
 	return strconv.FormatFloat(usedPercentage, 'f', 2, 64), nil
 }
 
-func getCPUUsageInfo() ([]string, error) {
-	cpuCores, cpuFrequency, err := getCPUCoresAndFrequency()
+func getCPUUsageInfo(ctx context.Context) ([]string, error) {
+	cpuCores, cpuFrequency, err := getCPUCoresAndFrequency(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	cpuUsage, err := getUsedPercent()
+	cpuUsage, err := getUsedPercent(ctx)
 	if err != nil {
 		return nil, err
 	}

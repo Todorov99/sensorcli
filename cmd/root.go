@@ -17,9 +17,11 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -42,25 +44,39 @@ var (
 	webHook       string
 )
 
-const (
-	cpuTemp        string = "CPU_TEMP"
-	cpuUsage       string = "CPU_USAGE"
-	memoryUsage    string = "MEMORY_USAGE"
-	outputToFile   string = "output_file"
-	invalidCommand string = "Invalid command."
-)
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "sensorcli",
 	Short: "Cli app which gets data from the sensors.",
 	Long:  `Cli app which gets cpu temperature data, cpu usage data and memory usage data from the sensors of your local PC.`,
 
-	Run: func(cmd *cobra.Command, args []string) {
-		terminateForTotalDuration()
-		for {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := context.Background()
 
+		ctx, cancel := context.WithCancel(ctx)
+		interuptSignal := make(chan os.Signal, 1)
+
+		signal.Notify(interuptSignal, os.Interrupt)
+		defer func() {
+			signal.Stop(interuptSignal)
+			cancel()
+		}()
+
+		go func() {
+			select {
+			case <-interuptSignal:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+
+		err := terminateForTotalDuration(ctx)
+		if err != nil {
+			rootLogger.Error(err)
+			return err
 		}
+
+		return nil
 	},
 }
 
@@ -114,7 +130,7 @@ func getTotalDurationInSeconds() time.Duration {
 	return time.Duration(totalDuration) * time.Second
 }
 
-func getSensorInfo(sensorGroup string) ([]string, error) {
+func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 	if sensorGroup == "" {
 		rootLogger.Errorf("invalid sensor group")
 		return nil, fmt.Errorf("invalid sensor group")
@@ -130,7 +146,7 @@ func getSensorInfo(sensorGroup string) ([]string, error) {
 		return nil, err
 	}
 
-	sensorInfo, err := sensorType.GetSensorData(unit, format)
+	sensorInfo, err := sensorType.GetSensorData(ctx, unit, format)
 	if err != nil {
 		rootLogger.Errorf(err.Error())
 		return nil, err
@@ -139,14 +155,14 @@ func getSensorInfo(sensorGroup string) ([]string, error) {
 	return sensorInfo, nil
 }
 
-func getMultipleSensorsMeasurements() ([]string, error) {
+func getMultipleSensorsMeasurements(ctx context.Context) ([]string, error) {
 	var multipleSensorsData []string
 
 	for i := 0; i < len(sensorGroup); i++ {
 
 		var currentSensorGroupData []string
 
-		currentSensorGroupData, err := getSensorInfo(sensorGroup[i])
+		currentSensorGroupData, err := getSensorInfo(ctx, sensorGroup[i])
 		if err != nil {
 			return nil, err
 		}
@@ -160,20 +176,23 @@ func getMultipleSensorsMeasurements() ([]string, error) {
 	return multipleSensorsData, nil
 }
 
-func terminateForTotalDuration() {
+func terminateForTotalDuration(ctx context.Context) error {
 
 	appTerminaitingDuration := time.After(getTotalDurationInSeconds())
 
 	for {
 		select {
+		case <-ctx.Done():
+			rootLogger.Error(ctx.Err())
+			return ctx.Err()
 		case <-appTerminaitingDuration:
-			return
+			return nil
 		default:
 
-			multipleSensorsData, err := getMultipleSensorsMeasurements()
+			multipleSensorsData, err := getMultipleSensorsMeasurements(ctx)
 			if err != nil {
 				rootLogger.Error(err)
-				panic(err)
+				return err
 			}
 
 			if file != "" {
@@ -181,13 +200,16 @@ func terminateForTotalDuration() {
 				rootLogger.Info("Writing sensor measurements in CSV file.")
 			}
 
-			getMeasurementsInDeltaDuration(multipleSensorsData)
+			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 }
 
-func getMeasurementsInDeltaDuration(sensorData []string) {
+func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) error {
 
 	measurementDuration := time.After(getDeltaDurationInSeconds())
 	done := make(chan bool)
@@ -204,7 +226,11 @@ func getMeasurementsInDeltaDuration(sensorData []string) {
 			fmt.Println(data)
 		case <-measurementDuration:
 			done <- true
-			return
+			return nil
+		case <-ctx.Done():
+			done <- true
+			rootLogger.Error(ctx.Err())
+			return ctx.Err()
 		}
 	}
 
@@ -213,7 +239,6 @@ func getMeasurementsInDeltaDuration(sensorData []string) {
 func webHookURL(url string, data string) {
 	var json = []byte(data)
 	http.Post(url, "application/json", bytes.NewBuffer(json))
-
 }
 
 // SendSensorData ...
