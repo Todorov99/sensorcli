@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var rootLogger logger.Logger = logger.NewLogger("./cmd/root")
+var rootLogger logger.Logger = logger.NewLogger("./root")
 
 var (
 	cfgFile       string
