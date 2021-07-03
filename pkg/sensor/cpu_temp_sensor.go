@@ -1,19 +1,13 @@
 package sensor
 
 import (
+	"context"
+
 	"github.com/shirou/gopsutil/host"
 	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 const (
-	celsius     string = "C"
-	fahrenheit  string = "F"
-	json        string = "JSON"
-	yamlStr     string = "YAML"
-	cpuTempName string = "cpuTemp"
-	unitError   string = "Invalid unit."
-	formatError string = "Invalid format."
-
 	tempSensor string = "CPU_TEMP"
 )
 
@@ -24,8 +18,8 @@ func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(arguments ...string) ([]string, error) {
-	cpuTemp, err := getTempMeasurments(arguments[0], arguments[1])
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, arguments ...string) ([]string, error) {
+	cpuTemp, err := getTempMeasurments(ctx, arguments[0], arguments[1])
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +31,10 @@ func (tempS *cpuTempSensor) Validate(arguments ...string) error {
 	return util.ValidateFormat(arguments[0])
 }
 
-func getTempMeasurments(unit string, format string) ([]string, error) {
+func getTempMeasurments(ctx context.Context, unit string, format string) ([]string, error) {
 	var tempData []string
 
-	cpuTempFromSensor, err := getTempFromSensor()
+	cpuTempFromSensor, err := getTempFromSensor(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +54,10 @@ func getTempMeasurments(unit string, format string) ([]string, error) {
 	tempData = append(tempData, parsedData)
 
 	return tempData, nil
-
 }
 
-func getTempFromSensor() (float64, error) {
-	sensorTeperatureInfo, err := host.SensorsTemperatures()
+func getTempFromSensor(ctx context.Context) (float64, error) {
+	sensorTeperatureInfo, err := host.SensorsTemperaturesWithContext(ctx)
 	if err != nil {
 		return 0, err
 	}
