@@ -222,8 +222,8 @@ func SendSensorData(sensorsInfo []string, done chan bool) <-chan string {
 	out := make(chan string)
 
 	go func() {
-		for _, i := range sensorsInfo {
-			out <- i
+		for _, currentSensorInfo := range sensorsInfo {
+			out <- currentSensorInfo
 		}
 
 		if <-done {
