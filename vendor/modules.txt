@@ -60,6 +60,7 @@ github.com/tklauser/go-sysconf
 # github.com/tklauser/numcpus v0.2.2
 github.com/tklauser/numcpus
 # golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows

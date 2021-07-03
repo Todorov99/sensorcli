@@ -6,7 +6,7 @@ import (
 	"github.com/ttodorov/sensorcli/pkg/logger"
 )
 
-var sensorLogger logger.Logger = logger.NewLogger("./pkg/sensor")
+var sensorLogger logger.Logger = logger.NewLogger("./sensor")
 
 // CreateSensor sensor type instance.
 func CreateSensor(sensorType string) (ISensor, error) {
