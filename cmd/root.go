@@ -137,8 +137,14 @@ func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 	}
 
 	sensorType, err := sensor.CreateSensor(sensorGroup)
+	if err != nil {
+		return nil, err
+	}
 
 	err = sensorType.Validate(format)
+	if err != nil {
+		return nil, err
+	}
 
 	unit, err := sensor.GetTempSensorUnit(sensorGroup)
 	if err != nil {
@@ -210,7 +216,6 @@ func terminateForTotalDuration(ctx context.Context) error {
 }
 
 func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) error {
-
 	measurementDuration := time.After(getDeltaDurationInSeconds())
 	done := make(chan bool)
 	sensorsData := SendSensorData(sensorData, done)
@@ -243,7 +248,6 @@ func webHookURL(url string, data string) {
 
 // SendSensorData ...
 func SendSensorData(sensorsInfo []string, done chan bool) <-chan string {
-
 	out := make(chan string)
 
 	go func() {

@@ -63,7 +63,7 @@ func getTempFromSensor(ctx context.Context) (float64, error) {
 	}
 
 	if len(sensorTeperatureInfo) == 0 {
-		return ReadFileSystemFile()
+		return ReadFileSystemFile("/sys/class/thermal/cooling_device2/device/status")
 	}
 
 	cpuTemp := sensorTeperatureInfo[0].Temperature

@@ -28,26 +28,26 @@ const (
 type Model Diveces
 
 // ReadYamlFile deserializing model from yaml file.
-func readYamlFile(filePath string) (Model, error) {
+func readYamlFile(filePath string) (*Diveces, error) {
 
-	model := &Model{}
+	devices := &Diveces{}
 
 	fileName, err := filepath.Abs(filePath)
 	if err != nil {
-		return *model, fmt.Errorf("Error with getting yaml file name.")
+		return nil, fmt.Errorf("error with getting yaml file name")
 	}
 
 	yamlFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return *model, err
+		return nil, err
 	}
 
-	fileErr := yaml.Unmarshal(yamlFile, &model)
+	fileErr := yaml.Unmarshal(yamlFile, &devices)
 	if fileErr != nil {
-		return *model, err
+		return nil, err
 	}
 
-	return *model, nil
+	return devices, nil
 }
 
 // WriteOutputToCSV measurement output to CSV file.
@@ -76,9 +76,9 @@ func WriteOutputToCSV(data []string, csvFileName string) error {
 }
 
 //ReadFileSystemFile reads server temperature from filesystem file.
-func ReadFileSystemFile() (float64, error) {
+func ReadFileSystemFile(fileSystemPath string) (float64, error) {
 
-	fileName, err := filepath.Abs("/sys/class/thermal/cooling_device2/device/status")
+	fileName, err := filepath.Abs(fileSystemPath)
 
 	fileContent, err := ioutil.ReadFile(fileName)
 	if err != nil {
