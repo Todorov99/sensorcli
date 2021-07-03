@@ -1,0 +1,65 @@
+---
+    devices:
+    - id: 1
+      name: device_name
+      description: my laptop device
+      sensors:
+      - id: 1
+        name: cpuTempCelsius
+        description: Measures CPU temp Celsius
+        unit: C
+        sensorGroups:
+        - CPU_TEMP
+        measurements: []
+        #- measuredAt: 0000-01-01 00:00:00 +0000 UTC
+        #value: "99"
+        #sensorId: 1
+        #deviceId: 1
+      - id: 3
+        name: cpuCoresCount
+        description: Measures CPU cores count
+        unit: count
+        sensorGroups:
+        - CPU_USAGE
+        measurements: []
+      - id: 4
+        name: cpuFrequency
+        description: Measures CPU frequency
+        unit: GHz
+        sensorGroups:
+        - CPU_USAGE
+        measurements: []
+      - id: 2
+        name: cpuUsagePercent
+        description: Measures CPU usage percent
+        unit: "%"
+        sensorGroups:
+        - CPU_USAGE
+        measurements: []
+      - id: 5
+        name: memoryTotal
+        description: Measures memory total
+        unit: GigaBytes
+        sensorGroups:
+        - MEMORY_USAGE
+        measurements: []
+      - id: 6
+        name: memoryAvailableBytes
+        description: Measures memory available Bytes
+        unit: Bytes
+        sensorGroups:
+        - MEMORY_USAGE
+        measurements: []
+      - id: 7
+        name: memoryUsedBytes
+        description: Measures memory used Bytes
+        unit: Bytes
+        sensorGroups:
+        - MEMORY_USAGE
+        measurements: []
+      - id: 8
+        name: memoryUsedPercent
+        description: Measures memory used percent
+        unit: "%"
+        sensorGroups:
+        - MEMORY_USAGE
