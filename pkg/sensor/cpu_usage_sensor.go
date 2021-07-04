@@ -22,9 +22,9 @@ func CreateUsageSensor() ISensor {
 	return &cpuUsageSensor{}
 }
 
-func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, arguments ...string) ([]string, error) {
+func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, unit, format string) ([]string, error) {
 
-	cpuUsage, err := getUsageMeasurements(ctx, arguments[1])
+	cpuUsage, err := getUsageMeasurements(ctx, format)
 
 	if err != nil {
 		return nil, err
@@ -40,12 +40,12 @@ func (usageS *cpuUsageSensor) Validate(arguments ...string) error {
 func getUsageMeasurements(ctx context.Context, format string) ([]string, error) {
 	var usageData []string
 
-	deviceID, err := getDeviceID()
+	deviceID, err := devices.getDeviceID()
 	if err != nil {
 		return nil, err
 	}
 
-	sensorID, err := GetSensorID(usageSensor)
+	sensorID, err := devices.getSensorID(usageSensor)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 	}
 
 	for i := 0; i < len(cpuInfo); i++ {
-		usageMeasurements := SetMeasurementValues(cpuInfo[i], sensorID[i], deviceID)
+		usageMeasurements := newMeasurement(cpuInfo[i], sensorID[i], deviceID)
 		usageData = append(usageData, util.ParseDataAccordingToFormat(format, usageMeasurements))
 	}
 

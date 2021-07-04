@@ -45,3 +45,7 @@ func (l Logger) Error(v ...interface{}) {
 func (l Logger) Errorf(msg string, args ...interface{}) {
 	l.errorLogger.Printf(msg, args...)
 }
+
+func (l Logger) Panic(v interface{}) {
+	l.errorLogger.Panic(v)
+}

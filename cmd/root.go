@@ -48,7 +48,8 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "sensorcli",
 	Short: "Cli app which gets data from the sensors.",
-	Long:  `Cli app which gets cpu temperature data, cpu usage data and memory usage data from the sensors of your local PC.`,
+	Long: `Cli app which gets cpu temperature data, 
+	cpu usage data and memory usage data from the sensors of your local PC.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
@@ -146,7 +147,7 @@ func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 		return nil, err
 	}
 
-	unit, err := sensor.GetTempSensorUnit(sensorGroup)
+	unit, err := sensor.GetSensorUnit(sensorGroup)
 	if err != nil {
 		rootLogger.Errorf(err.Error())
 		return nil, err
