@@ -1,8 +1,9 @@
-FROM golang:1.13.8-alpine3.11 as builder
+FROM golang:1.14.3-alpine as builder
 
-WORKDIR /sensor
+WORKDIR /sensorcli
+ENV CGO_ENABLED=0
 
-COPY . /sensor
+COPY . /sensorcli
 
 RUN go build -o sensorcli .
 
@@ -11,6 +12,6 @@ RUN apk update && apk add bash
 
 COPY ./model.yaml /
 COPY ./docker-entrypoint.sh /
-COPY --from=builder /sensor /sensor
+COPY --from=builder /sensorcli /sensorcli
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
