@@ -15,15 +15,20 @@ const (
 	usageSensor string = "CPU_USAGE"
 )
 
-type cpuUsageSensor Measurment
+type cpuUsageSensor struct {
+	cpuUsage     string
+	cpuCores     string
+	cpuFrequency string
+	deviceID     string
+	sensors      []sensor
+}
 
 // CreateUsageSensor creates instance of usage sensor.
 func CreateUsageSensor() ISensor {
 	return &cpuUsageSensor{}
 }
 
-func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, unit, format string) ([]string, error) {
-
+func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, unit []string, format string) ([]string, error) {
 	cpuUsage, err := getUsageMeasurements(ctx, format)
 
 	if err != nil {
@@ -45,7 +50,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 		return nil, err
 	}
 
-	sensorID, err := devices.getSensorID(usageSensor)
+	sensors, err := devices.getSensorsByGroup(usageSensor)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +60,13 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 		return nil, err
 	}
 
-	for i := 0; i < len(cpuInfo); i++ {
-		usageMeasurements := newMeasurement(cpuInfo[i], sensorID[i], deviceID)
-		usageData = append(usageData, util.ParseDataAccordingToFormat(format, usageMeasurements))
+	cpuInfo.deviceID = deviceID
+	cpuInfo.sensors = sensors
+
+	measurements := newMeasurements(cpuInfo)
+
+	for _, m := range measurements {
+		usageData = append(usageData, util.ParseDataAccordingToFormat(format, m))
 	}
 
 	return usageData, nil
@@ -95,18 +104,20 @@ func getUsedPercent(ctx context.Context) (string, error) {
 	return strconv.FormatFloat(usedPercentage, 'f', 2, 64), nil
 }
 
-func getCPUUsageInfo(ctx context.Context) ([]string, error) {
-	cpuCores, cpuFrequency, err := getCPUCoresAndFrequency(ctx)
+func getCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
+	cores, frequency, err := getCPUCoresAndFrequency(ctx)
 	if err != nil {
-		return nil, err
+		return cpuUsageSensor{}, err
 	}
 
-	cpuUsage, err := getUsedPercent(ctx)
+	usage, err := getUsedPercent(ctx)
 	if err != nil {
-		return nil, err
+		return cpuUsageSensor{}, err
 	}
 
-	cpuInfo := []string{cpuUsage, cpuCores, cpuFrequency}
-
-	return cpuInfo, nil
+	return cpuUsageSensor{
+		cpuCores:     cores,
+		cpuFrequency: frequency,
+		cpuUsage:     usage,
+	}, nil
 }

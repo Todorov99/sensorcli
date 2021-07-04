@@ -113,11 +113,13 @@ func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 		return nil, err
 	}
 
-	unit, err := sensor.GetSensorUnit(sensorGroup)
+	unit, err := sensor.GetSensorUnits(sensorGroup)
 	if err != nil {
 		cmdLogger.Errorf(err.Error())
 		return nil, err
 	}
+
+	fmt.Println(unit)
 
 	sensorInfo, err := sensorType.GetSensorData(ctx, unit, format)
 	if err != nil {

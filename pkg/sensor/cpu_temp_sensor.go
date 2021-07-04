@@ -12,14 +12,18 @@ const (
 	tempSensor string = "CPU_TEMP"
 )
 
-type cpuTempSensor Measurment
+type cpuTempSensor struct {
+	cpuTemp  string
+	deviceID string
+	sensors  []sensor
+}
 
 // CreateTempSensor creates instance of temperature sensor.
 func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, unit, format string) ([]string, error) {
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, unit []string, format string) ([]string, error) {
 	sensorLogger.Info("Gerring sensor data...")
 	cpuTemp, err := getTempMeasurments(ctx, unit, format)
 	if err != nil {
@@ -35,10 +39,10 @@ func (tempS *cpuTempSensor) Validate(arguments ...string) error {
 	return util.ValidateFormat(arguments[0])
 }
 
-func getTempMeasurments(ctx context.Context, unit string, format string) ([]string, error) {
+func getTempMeasurments(ctx context.Context, units []string, format string) ([]string, error) {
 	var tempData []string
 
-	cpuTempFromSensor, err := getTempFromSensor(ctx)
+	cpuTempInfo, err := getTempFromSensor(ctx, units[0])
 	if err != nil {
 		return nil, err
 	}
@@ -48,31 +52,33 @@ func getTempMeasurments(ctx context.Context, unit string, format string) ([]stri
 		return nil, err
 	}
 
-	sensorID, err := devices.getSensorID(tempSensor)
+	sensor, err := devices.getSensorsByGroup(tempSensor)
+	if err != nil {
+		return nil, err
+	}
 
-	temperatureInCurrentUnit := util.ParseTempAccordingToUnit(unit, cpuTempFromSensor)
+	cpuTempInfo.sensors = sensor
+	cpuTempInfo.deviceID = deviceID
 
-	measurement := newMeasurement(temperatureInCurrentUnit, sensorID[0], deviceID)
-	parsedData := util.ParseDataAccordingToFormat(format, measurement)
-
-	tempData = append(tempData, parsedData)
+	measurements := newMeasurements(cpuTempInfo)
+	for _, m := range measurements {
+		tempData = append(tempData, util.ParseDataAccordingToFormat(format, m))
+	}
 
 	return tempData, nil
 }
 
-func getTempFromSensor(ctx context.Context) (float64, error) {
+func getTempFromSensor(ctx context.Context, unit string) (cpuTempSensor, error) {
 	sensorLogger.Info("Getting temperature from sensor")
 	sensorTeperatureInfo, err := host.SensorsTemperaturesWithContext(ctx)
 	if err != nil {
-		return 0, err
-	}
-
-	if len(sensorTeperatureInfo) == 0 {
-		return ReadFileSystemFile("/sys/class/thermal/cooling_device2/device/status")
+		return cpuTempSensor{}, err
 	}
 
 	cpuTemp := sensorTeperatureInfo[0].Temperature
 	sensorLogger.Info("Temperature from sensor is successfully got")
 
-	return cpuTemp, nil
+	return cpuTempSensor{
+		cpuTemp: util.ParseTempAccordingToUnit(unit, cpuTemp),
+	}, nil
 }

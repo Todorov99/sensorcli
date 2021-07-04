@@ -2,57 +2,56 @@ package sensor
 
 import (
 	"fmt"
-	"sort"
 )
 
 // Sensor model
-type Sensor struct {
+type sensor struct {
 	ID           string       `json:"id" yaml:"id"`
 	Name         string       `json:"name" yaml:"name"`
 	Description  string       `json:"description" yaml:"description"`
 	Unit         string       `json:"unit" yaml:"unit"`
 	SensorGroups []string     `json:"sensorGroups" yaml:"sensorGroups"`
-	Measurments  []Measurment `json:"measurements" yaml:"measurements"`
+	Measurments  []measurment `json:"measurements" yaml:"measurements"`
 }
 
-// GetSensorID of specified sensor group.
-func (d *Diveces) getSensorID(sensorType string) ([]string, error) {
-	var sensorsIds []string
+func (d *Diveces) getSensorsByGroup(sensorGroup string) ([]sensor, error) {
+	var sensorsIds []sensor
 
 	for _, currentSensor := range d.Devices[0].Sensors {
 
-		if currentSensor.SensorGroups[0] == sensorType {
+		if currentSensor.SensorGroups[0] == sensorGroup {
 
-			currentSensorID, err := getSensorIDAccordingToSensorName(currentSensor.Name, currentSensor.ID)
+			_, err := currentSensor.getSensorIDAccordingToSensorName(currentSensor.Name, currentSensor.ID)
 			if err != nil {
 				return nil, err
 			}
 
-			sensorsIds = append(sensorsIds, currentSensorID)
+			sensorsIds = append(sensorsIds, currentSensor)
 		}
 	}
 
-	sort.Sort(sort.StringSlice(sensorsIds))
+	//sort.Sort(sort.StringSlice(sensorsIds))
 	return sensorsIds, nil
 }
 
 // GetTempSensorUnit gets current unit for temperature sensor measurment.
-func GetSensorUnit(sensorGroup string) (string, error) {
+func GetSensorUnits(sensorGroup string) ([]string, error) {
 	sensorLogger.Info("Getting current unit for temperature sensor")
+	units := []string{}
 
 	for _, currentsensor := range devices.Devices[0].Sensors {
 		for _, sgr := range currentsensor.SensorGroups {
 
 			if sgr == sensorGroup {
-				return currentsensor.Unit, nil
+				units = append(units, currentsensor.Unit)
 			}
 		}
 	}
 
-	return "", fmt.Errorf("failed to get sensor unit")
+	return units, nil
 }
 
-func getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
+func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
 
 	switch sensorName {
 
