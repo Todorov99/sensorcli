@@ -24,30 +24,26 @@ const (
 	memoryUsedPercent    string = "memoryUsedPercent"
 )
 
-// Model for mapping
-type Model Diveces
+var devices *Diveces
 
 // ReadYamlFile deserializing model from yaml file.
-func readYamlFile(filePath string) (*Diveces, error) {
-
-	devices := &Diveces{}
-
+func ReadYamlFile(filePath string) error {
 	fileName, err := filepath.Abs(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error with getting yaml file name")
+		return fmt.Errorf("error with getting yaml file name")
 	}
 
 	yamlFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	fileErr := yaml.Unmarshal(yamlFile, &devices)
 	if fileErr != nil {
-		return nil, err
+		return err
 	}
 
-	return devices, nil
+	return nil
 }
 
 // WriteOutputToCSV measurement output to CSV file.

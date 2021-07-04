@@ -16,15 +16,10 @@ type Sensor struct {
 }
 
 // GetSensorID of specified sensor group.
-func GetSensorID(sensorType string) ([]string, error) {
+func (d *Diveces) getSensorID(sensorType string) ([]string, error) {
 	var sensorsIds []string
 
-	devices, err := readYamlFile(fileFullPath)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, currentSensor := range devices.Devices[0].Sensors {
+	for _, currentSensor := range d.Devices[0].Sensors {
 
 		if currentSensor.SensorGroups[0] == sensorType {
 
@@ -42,19 +37,14 @@ func GetSensorID(sensorType string) ([]string, error) {
 }
 
 // GetTempSensorUnit gets current unit for temperature sensor measurment.
-func GetTempSensorUnit(sensorGroup string) (string, error) {
+func GetSensorUnit(sensorGroup string) (string, error) {
 	sensorLogger.Info("Getting current unit for temperature sensor")
 
-	devices, err := readYamlFile(fileFullPath)
-	if err != nil {
-		return "", err
-	}
+	for _, currentsensor := range devices.Devices[0].Sensors {
+		for _, sgr := range currentsensor.SensorGroups {
 
-	for _, i := range devices.Devices[0].Sensors {
-		for _, j := range i.SensorGroups {
-
-			if j == sensorGroup {
-				return i.Unit, nil
+			if sgr == sensorGroup {
+				return currentsensor.Unit, nil
 			}
 		}
 	}

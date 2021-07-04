@@ -2,6 +2,7 @@ package sensor
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/shirou/gopsutil/host"
 	"github.com/ttodorov/sensorcli/pkg/util"
@@ -18,10 +19,13 @@ func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, arguments ...string) ([]string, error) {
-	cpuTemp, err := getTempMeasurments(ctx, arguments[0], arguments[1])
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, unit, format string) ([]string, error) {
+	sensorLogger.Info("Gerring sensor data...")
+	cpuTemp, err := getTempMeasurments(ctx, unit, format)
 	if err != nil {
-		return nil, err
+		msg := "failed to get temperature measurements"
+		sensorLogger.Errorf(msg, err)
+		return nil, fmt.Errorf(msg, err)
 	}
 
 	return cpuTemp, nil
@@ -39,16 +43,16 @@ func getTempMeasurments(ctx context.Context, unit string, format string) ([]stri
 		return nil, err
 	}
 
-	deviceID, err := getDeviceID()
+	deviceID, err := devices.getDeviceID()
 	if err != nil {
 		return nil, err
 	}
 
-	sensorID, err := GetSensorID(tempSensor)
+	sensorID, err := devices.getSensorID(tempSensor)
 
 	temperatureInCurrentUnit := util.ParseTempAccordingToUnit(unit, cpuTempFromSensor)
 
-	measurement := SetMeasurementValues(temperatureInCurrentUnit, sensorID[0], deviceID)
+	measurement := newMeasurement(temperatureInCurrentUnit, sensorID[0], deviceID)
 	parsedData := util.ParseDataAccordingToFormat(format, measurement)
 
 	tempData = append(tempData, parsedData)
@@ -57,6 +61,7 @@ func getTempMeasurments(ctx context.Context, unit string, format string) ([]stri
 }
 
 func getTempFromSensor(ctx context.Context) (float64, error) {
+	sensorLogger.Info("Getting temperature from sensor")
 	sensorTeperatureInfo, err := host.SensorsTemperaturesWithContext(ctx)
 	if err != nil {
 		return 0, err
@@ -67,6 +72,7 @@ func getTempFromSensor(ctx context.Context) (float64, error) {
 	}
 
 	cpuTemp := sensorTeperatureInfo[0].Temperature
+	sensorLogger.Info("Temperature from sensor is successfully got")
 
 	return cpuTemp, nil
 }
