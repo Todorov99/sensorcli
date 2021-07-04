@@ -16,17 +16,11 @@ limitations under the License.
 package cmd
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"net/http"
 	"os"
-	"os/signal"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/ttodorov/sensorcli/pkg/logger"
-	"github.com/ttodorov/sensorcli/pkg/sensor"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -52,30 +46,30 @@ var rootCmd = &cobra.Command{
 	cpu usage data and memory usage data from the sensors of your local PC.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+		// ctx := context.Background()
 
-		ctx, cancel := context.WithCancel(ctx)
-		interuptSignal := make(chan os.Signal, 1)
+		// ctx, cancel := context.WithCancel(ctx)
+		// interuptSignal := make(chan os.Signal, 1)
 
-		signal.Notify(interuptSignal, os.Interrupt)
-		defer func() {
-			signal.Stop(interuptSignal)
-			cancel()
-		}()
+		// signal.Notify(interuptSignal, os.Interrupt)
+		// defer func() {
+		// 	signal.Stop(interuptSignal)
+		// 	cancel()
+		// }()
 
-		go func() {
-			select {
-			case <-interuptSignal:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
+		// go func() {
+		// 	select {
+		// 	case <-interuptSignal:
+		// 		cancel()
+		// 	case <-ctx.Done():
+		// 	}
+		// }()
 
-		err := terminateForTotalDuration(ctx)
-		if err != nil {
-			rootLogger.Error(err)
-			return err
-		}
+		// err := terminateForTotalDuration(ctx)
+		// if err != nil {
+		// 	rootLogger.Error(err)
+		// 	return err
+		// }
 
 		return nil
 	},
@@ -90,13 +84,13 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.Flags().StringVar(&format, "format", "JSON", "The data could be printed either JSON or YAML format.")
-	rootCmd.Flags().Int64Var(&deltaDuration, "delta_duration", 3, "The period of which you will get your sensor data.")
-	rootCmd.Flags().StringVar(&file, "output_file", "", "Writing the output into CSV file.")
-	rootCmd.Flags().Float64Var(&totalDuration, "total_duration", 60.0, "Terminating the whole program after specified duration")
-	rootCmd.Flags().StringVar(&webHook, "web_hook_url", "", "Expose to current port.")
+	// rootCmd.Flags().StringVar(&format, "format", "JSON", "The data could be printed either JSON or YAML format.")
+	// rootCmd.Flags().Int64Var(&deltaDuration, "delta_duration", 3, "The period of which you will get your sensor data.")
+	// rootCmd.Flags().StringVar(&file, "output_file", "", "Writing the output into CSV file.")
+	// rootCmd.Flags().Float64Var(&totalDuration, "total_duration", 60.0, "Terminating the whole program after specified duration")
+	// rootCmd.Flags().StringVar(&webHook, "web_hook_url", "", "Expose to current port.")
 
-	rootCmd.Flags().StringSliceVar(&sensorGroup, "sensor_group", []string{""}, "There are three main sensor groups: CPU_TEMP, CPU_USAGE and MEMORY_USAGE.")
+	// rootCmd.Flags().StringSliceVar(&sensorGroup, "sensor_group", []string{""}, "There are three main sensor groups: CPU_TEMP, CPU_USAGE and MEMORY_USAGE.")
 
 }
 
@@ -121,146 +115,4 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
-}
-
-func getDeltaDurationInSeconds() time.Duration {
-	return time.Duration(deltaDuration) * time.Second
-}
-
-func getTotalDurationInSeconds() time.Duration {
-	return time.Duration(totalDuration) * time.Second
-}
-
-func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
-	if sensorGroup == "" {
-		rootLogger.Errorf("invalid sensor group")
-		return nil, fmt.Errorf("invalid sensor group")
-	}
-
-	sensorType, err := sensor.CreateSensor(sensorGroup)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sensorType.Validate(format)
-	if err != nil {
-		return nil, err
-	}
-
-	unit, err := sensor.GetSensorUnit(sensorGroup)
-	if err != nil {
-		rootLogger.Errorf(err.Error())
-		return nil, err
-	}
-
-	sensorInfo, err := sensorType.GetSensorData(ctx, unit, format)
-	if err != nil {
-		rootLogger.Errorf(err.Error())
-		return nil, err
-	}
-
-	return sensorInfo, nil
-}
-
-func getMultipleSensorsMeasurements(ctx context.Context) ([]string, error) {
-	var multipleSensorsData []string
-
-	for i := 0; i < len(sensorGroup); i++ {
-
-		var currentSensorGroupData []string
-
-		currentSensorGroupData, err := getSensorInfo(ctx, sensorGroup[i])
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < len(currentSensorGroupData); j++ {
-			multipleSensorsData = append(multipleSensorsData, currentSensorGroupData[j])
-		}
-
-	}
-
-	return multipleSensorsData, nil
-}
-
-func terminateForTotalDuration(ctx context.Context) error {
-
-	appTerminaitingDuration := time.After(getTotalDurationInSeconds())
-
-	for {
-		select {
-		case <-ctx.Done():
-			rootLogger.Error(ctx.Err())
-			return ctx.Err()
-		case <-appTerminaitingDuration:
-			return nil
-		default:
-
-			multipleSensorsData, err := getMultipleSensorsMeasurements(ctx)
-			if err != nil {
-				rootLogger.Error(err)
-				return err
-			}
-
-			if file != "" {
-				go sensor.WriteOutputToCSV(multipleSensorsData, file)
-				rootLogger.Info("Writing sensor measurements in CSV file.")
-			}
-
-			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-}
-
-func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) error {
-	measurementDuration := time.After(getDeltaDurationInSeconds())
-	done := make(chan bool)
-	sensorsData := SendSensorData(sensorData, done)
-
-	for {
-		select {
-		case data := <-sensorsData:
-
-			if webHook != "" {
-				webHookURL(webHook, data)
-			}
-
-			fmt.Println(data)
-		case <-measurementDuration:
-			done <- true
-			return nil
-		case <-ctx.Done():
-			done <- true
-			rootLogger.Error(ctx.Err())
-			return ctx.Err()
-		}
-	}
-
-}
-
-func webHookURL(url string, data string) {
-	var json = []byte(data)
-	http.Post(url, "application/json", bytes.NewBuffer(json))
-}
-
-// SendSensorData ...
-func SendSensorData(sensorsInfo []string, done chan bool) <-chan string {
-	out := make(chan string)
-
-	go func() {
-		for _, currentSensorInfo := range sensorsInfo {
-			out <- currentSensorInfo
-		}
-
-		if <-done {
-			close(out)
-			return
-		}
-	}()
-
-	return out
 }
