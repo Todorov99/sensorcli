@@ -3,6 +3,7 @@ package sensor
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/shirou/gopsutil/host"
 	"github.com/ttodorov/sensorcli/pkg/util"
@@ -79,6 +80,6 @@ func getTempFromSensor(ctx context.Context, unit string) (cpuTempSensor, error) 
 	sensorLogger.Info("Temperature from sensor is successfully got")
 
 	return cpuTempSensor{
-		cpuTemp: util.ParseTempAccordingToUnit(unit, cpuTemp),
+		cpuTemp: strconv.FormatFloat(cpuTemp, 'f', 1, 64),
 	}, nil
 }

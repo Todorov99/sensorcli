@@ -30,7 +30,6 @@ func (d *Diveces) getSensorsByGroup(sensorGroup string) ([]sensor, error) {
 		}
 	}
 
-	//sort.Sort(sort.StringSlice(sensorsIds))
 	return sensorsIds, nil
 }
 

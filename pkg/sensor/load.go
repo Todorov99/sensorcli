@@ -13,13 +13,13 @@ const (
 	fileFullPath    string = "./model.yaml"
 	csvFileFullPath string = "./"
 
-	cpuTempCelsius       string = "cpuTempCelsius"
-	cpuCoresCount        string = "cpuCoresCount"
-	cpuUsagePercent      string = "cpuUsagePercent"
+	cpuTempCelsius       string = "cpuTemp"
+	cpuCoresCount        string = "cpuCores"
+	cpuUsagePercent      string = "cpuUsage"
 	cpuFrequency         string = "cpuFrequency"
 	memoryTotal          string = "memoryTotal"
-	memoryAvailableBytes string = "memoryAvailableBytes"
-	memoryUsedBytes      string = "memoryUsedBytes"
+	memoryAvailableBytes string = "memoryAvailable"
+	memoryUsedBytes      string = "memoryUsed"
 	memoryUsedPercent    string = "memoryUsedPercent"
 )
 

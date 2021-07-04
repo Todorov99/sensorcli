@@ -2,6 +2,8 @@ package sensor
 
 import (
 	"time"
+
+	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 // Measurment model
@@ -36,13 +38,29 @@ func newMeasurements(info interface{}) []measurment {
 		for _, s := range v.sensors {
 			switch s.Name {
 			case memoryAvailableBytes:
-				m = append(m, newMeasurement(v.availableMemory, s.ID, v.deviceID))
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.availableMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
 			case memoryUsedBytes:
-				m = append(m, newMeasurement(v.usedMemory, s.ID, v.deviceID))
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.usedMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
 			case memoryTotal:
-				m = append(m, newMeasurement(v.totalMemory, s.ID, v.deviceID))
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.totalMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
 			case memoryUsedPercent:
-				m = append(m, newMeasurement(v.usedPercentMemory, s.ID, v.deviceID))
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.usedPercentMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
 			}
 
 		}
@@ -50,7 +68,11 @@ func newMeasurements(info interface{}) []measurment {
 		for _, s := range v.sensors {
 			switch s.Name {
 			case cpuTempCelsius:
-				m = append(m, newMeasurement(v.cpuTemp, s.ID, v.deviceID))
+				val, err := util.ParseTempAccordingToUnit(s.Unit, v.cpuTemp)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
 			}
 
 		}
