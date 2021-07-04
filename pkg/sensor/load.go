@@ -2,7 +2,6 @@ package sensor
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,24 +25,23 @@ const (
 
 var devices *Diveces
 
-// ReadYamlFile deserializing model from yaml file.
-func ReadYamlFile(filePath string) error {
-	fileName, err := filepath.Abs(filePath)
+// load the content of the model.yaml file
+func init() {
+	fileName, err := filepath.Abs("./model.yaml")
 	if err != nil {
-		return fmt.Errorf("error with getting yaml file name")
+		sensorLogger.Panic(err)
 	}
 
 	yamlFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return err
+		sensorLogger.Panic(err)
 	}
 
 	fileErr := yaml.Unmarshal(yamlFile, &devices)
 	if fileErr != nil {
-		return err
+		sensorLogger.Panic(err)
 	}
 
-	return nil
 }
 
 // WriteOutputToCSV measurement output to CSV file.
@@ -71,7 +69,7 @@ func WriteOutputToCSV(data []string, csvFileName string) error {
 	return nil
 }
 
-//ReadFileSystemFile reads server temperature from filesystem file.
+// //ReadFileSystemFile reads server temperature from filesystem file.
 func ReadFileSystemFile(fileSystemPath string) (float64, error) {
 
 	fileName, err := filepath.Abs(fileSystemPath)

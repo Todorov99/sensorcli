@@ -71,13 +71,7 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		err := sensor.ReadYamlFile("./model.yaml")
-		if err != nil {
-			rootLogger.Error(err)
-			return err
-		}
-
-		err = terminateForTotalDuration(ctx)
+		err := terminateForTotalDuration(ctx)
 		if err != nil {
 			rootLogger.Error(err)
 			return err
