@@ -50,7 +50,7 @@ func (memoryS *cpuMemorySensor) ValidateUnit() error {
 
 	currentDeviceSensors, err := devices.getDeviceSensorsByGroup(memorySensor)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get current device sensors: %w", err)
 	}
 
 	memoryS.sensors = currentDeviceSensors

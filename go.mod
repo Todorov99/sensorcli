@@ -1,4 +1,4 @@
-module github.com/ttodorov/sensorcli
+module github.com/Todorov99/sensorcli
 
 go 1.16
 
