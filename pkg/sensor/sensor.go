@@ -11,7 +11,7 @@ type sensor struct {
 	Description  string       `json:"description" yaml:"description"`
 	Unit         string       `json:"unit" yaml:"unit"`
 	SensorGroups []string     `json:"sensorGroups" yaml:"sensorGroups"`
-	Measurments  []measurment `json:"measurements" yaml:"measurements"`
+	Measurments  []Measurment `json:"measurements" yaml:"measurements"`
 }
 
 func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {

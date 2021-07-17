@@ -7,7 +7,7 @@ import (
 )
 
 // Measurment model
-type measurment struct {
+type Measurment struct {
 	MeasuredAt time.Time `json:"measuredAt" yaml:"measuredAt"`
 	Value      string    `json:"value" yaml:"value"`
 	SensorID   string    `json:"sensorId" yaml:"sensorId"`
@@ -15,12 +15,12 @@ type measurment struct {
 }
 
 // SetMeasurementValues sets property fields of measurement model.
-func newMeasurement(value string, sensorID string, deviceID string) measurment {
-	return measurment{time.Now(), value, sensorID, deviceID}
+func newMeasurement(value string, sensorID string, deviceID string) Measurment {
+	return Measurment{time.Now(), value, sensorID, deviceID}
 }
 
-func newMeasurements(info interface{}) []measurment {
-	var m = []measurment{}
+func newMeasurements(info interface{}) []Measurment {
+	var m = []Measurment{}
 	switch v := info.(type) {
 	case cpuUsageSensor:
 		for _, s := range v.sensors {

@@ -13,9 +13,9 @@ const (
 	fileFullPath    string = "./model.yaml"
 	csvFileFullPath string = "./"
 
-	cpuTempCelsius    string = "cpuTemp"
-	cpuCoresCount     string = "cpuCores"
-	cpuUsagePercent   string = "cpuUsage"
+	cpuTempCelsius    string = "cpuTempCelsius"
+	cpuCoresCount     string = "cpuCoresCount"
+	cpuUsagePercent   string = "cpuUsagePercent"
 	cpuFrequency      string = "cpuFrequency"
 	memoryTotal       string = "memoryTotal"
 	memoryAvailable   string = "memoryAvailable"
@@ -69,7 +69,7 @@ func WriteOutputToCSV(data []string, csvFileName string) error {
 	return nil
 }
 
-//ReadFileSystemFile reads server temperature from filesystem file.
+// //ReadFileSystemFile reads server temperature from filesystem file.
 func ReadFileSystemFile(fileSystemPath string) (float64, error) {
 
 	fileName, err := filepath.Abs(fileSystemPath)

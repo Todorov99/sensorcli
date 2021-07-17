@@ -25,7 +25,7 @@ func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Gerring sensor data...")
 	cpuTemp, err := getTempMeasurments(ctx, format)
 	if err != nil {
@@ -44,6 +44,14 @@ func (tempS *cpuTempSensor) ValidateFormat(format string) error {
 func (tempS *cpuTempSensor) ValidateUnit() error {
 	sensorLogger.Info("Validating temperature sensor units...")
 	var err error
+
+	currentDeviceSensors, err := devices.getDeviceSensorsByGroup(tempSensor)
+	if err != nil {
+		return fmt.Errorf("failed to get current device sensors: %w", err)
+	}
+
+	tempS.sensors = currentDeviceSensors
+
 	for _, currentSensor := range tempS.sensors {
 		if currentSensor.Unit != "F" && currentSensor.Unit != "C" {
 			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
@@ -53,8 +61,8 @@ func (tempS *cpuTempSensor) ValidateUnit() error {
 	return err
 }
 
-func getTempMeasurments(ctx context.Context, format string) ([]string, error) {
-	var tempData []string
+func getTempMeasurments(ctx context.Context, format string) ([]Measurment, error) {
+	sensorLogger.Info("Getting temperature sensor measurements...")
 
 	cpuTempInfo, err := getTempFromSensor(ctx)
 	if err != nil {
@@ -74,12 +82,7 @@ func getTempMeasurments(ctx context.Context, format string) ([]string, error) {
 	cpuTempInfo.sensors = sensor
 	cpuTempInfo.deviceID = deviceID
 
-	measurements := newMeasurements(cpuTempInfo)
-	for _, m := range measurements {
-		tempData = append(tempData, util.ParseDataAccordingToFormat(format, m))
-	}
-
-	return tempData, nil
+	return newMeasurements(cpuTempInfo), nil
 }
 
 func getTempFromSensor(ctx context.Context) (cpuTempSensor, error) {

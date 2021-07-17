@@ -29,7 +29,7 @@ func CreateUsageSensor() ISensor {
 	return &cpuUsageSensor{}
 }
 
-func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
+func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, format string) ([]Measurment, error) {
 	return getUsageMeasurements(ctx, format)
 }
 
@@ -39,8 +39,15 @@ func (usageS *cpuUsageSensor) ValidateFormat(format string) error {
 
 func (usageS *cpuUsageSensor) ValidateUnit() error {
 	sensorLogger.Info("Validating usage sensor units...")
-
 	var err error
+
+	currentDeviceSensors, err := devices.getDeviceSensorsByGroup(usageSensor)
+	if err != nil {
+		return fmt.Errorf("failed to get current device sensors: %w", err)
+	}
+
+	usageS.sensors = currentDeviceSensors
+
 	for _, currentSensor := range usageS.sensors {
 		if currentSensor.Unit != "GHz" &&
 			currentSensor.Unit != "%" &&
@@ -53,8 +60,8 @@ func (usageS *cpuUsageSensor) ValidateUnit() error {
 	return err
 }
 
-func getUsageMeasurements(ctx context.Context, format string) ([]string, error) {
-	var usageData []string
+func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, error) {
+	sensorLogger.Info("Getting usage sensor measurements...")
 
 	deviceID, err := devices.getDeviceID()
 	if err != nil {
@@ -74,13 +81,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 	cpuInfo.deviceID = deviceID
 	cpuInfo.sensors = sensors
 
-	measurements := newMeasurements(cpuInfo)
-
-	for _, m := range measurements {
-		usageData = append(usageData, util.ParseDataAccordingToFormat(format, m))
-	}
-
-	return usageData, nil
+	return newMeasurements(cpuInfo), nil
 }
 
 func newCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
