@@ -172,10 +172,10 @@ func terminateForTotalDuration(ctx context.Context) error {
 			}
 
 			if file != "" {
+				cmdLogger.Info("Writing sensor measurements in CSV file.")
 				var data []string
 				data = append(data, util.ParseDataAccordingToFormat(format, multipleSensorsData))
 				go sensor.WriteOutputToCSV(data, file)
-				cmdLogger.Info("Writing sensor measurements in CSV file.")
 			}
 
 			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
@@ -188,6 +188,8 @@ func terminateForTotalDuration(ctx context.Context) error {
 }
 
 func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Measurment) error {
+	cmdLogger.Info("Getting measurements in delta duration...")
+
 	measurementDuration := time.After(getDeltaDurationInSeconds())
 	done := make(chan bool)
 	sensorsData := sendSensorData(sensorData, done)
@@ -220,6 +222,8 @@ func webHookURL(url string, data string) {
 }
 
 func sendSensorData(sensorsInfo []sensor.Measurment, done chan bool) <-chan sensor.Measurment {
+	cmdLogger.Info("Sending sensor data...")
+
 	out := make(chan sensor.Measurment)
 
 	go func() {

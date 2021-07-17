@@ -46,22 +46,28 @@ func (memoryS *cpuMemorySensor) ValidateFormat(format string) error {
 
 func (memoryS *cpuMemorySensor) ValidateUnit() error {
 	sensorLogger.Info("Validating memory sensor units...")
-
 	var err error
+
+	currentDeviceSensors, err := devices.getDeviceSensorsByGroup(memorySensor)
+	if err != nil {
+		return err
+	}
+
+	memoryS.sensors = currentDeviceSensors
+
 	for _, currentSensor := range memoryS.sensors {
 		if currentSensor.Unit != "MegaBytes" &&
 			currentSensor.Unit != "%" && currentSensor.Unit != "Bytes" &&
 			currentSensor.Unit != "Kilobytes" && currentSensor.Unit != "GigaBytes" {
-			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+			err = multierror.Append(err, fmt.Errorf("invalid memory unit: %q", currentSensor.Unit))
 		}
 	}
 
-	return nil
+	return err
 }
 
 func getMemoryUsageData(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Getting memory usage data...")
-	//var memoryData []string
 
 	deviceID, err := devices.getDeviceID()
 	if err != nil {
@@ -86,11 +92,6 @@ func getMemoryUsageData(ctx context.Context, format string) ([]Measurment, error
 
 	memoryUsageValues.sensors = sensors
 	memoryUsageValues.deviceID = deviceID
-
-	//measurements := newMeasurements(memoryUsageValues)
-	// for _, m := range measurements {
-	// 	memoryData = append(memoryData, util.ParseDataAccordingToFormat(format, m))
-	// }
 
 	return newMeasurements(memoryUsageValues), nil
 }

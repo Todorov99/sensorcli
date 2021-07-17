@@ -39,8 +39,15 @@ func (usageS *cpuUsageSensor) ValidateFormat(format string) error {
 
 func (usageS *cpuUsageSensor) ValidateUnit() error {
 	sensorLogger.Info("Validating usage sensor units...")
-
 	var err error
+
+	currentDeviceSensors, err := devices.getDeviceSensorsByGroup(usageSensor)
+	if err != nil {
+		return fmt.Errorf("failed to get current device sensors: %w", err)
+	}
+
+	usageS.sensors = currentDeviceSensors
+
 	for _, currentSensor := range usageS.sensors {
 		if currentSensor.Unit != "GHz" &&
 			currentSensor.Unit != "%" &&
@@ -54,7 +61,7 @@ func (usageS *cpuUsageSensor) ValidateUnit() error {
 }
 
 func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, error) {
-	//var usageData []string
+	sensorLogger.Info("Getting usage sensor measurements...")
 
 	deviceID, err := devices.getDeviceID()
 	if err != nil {
@@ -73,12 +80,6 @@ func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, err
 
 	cpuInfo.deviceID = deviceID
 	cpuInfo.sensors = sensors
-
-	//measurements := newMeasurements(cpuInfo)
-
-	// for _, m := range measurements {
-	// 	usageData = append(usageData, util.ParseDataAccordingToFormat(format, m))
-	// }
 
 	return newMeasurements(cpuInfo), nil
 }
