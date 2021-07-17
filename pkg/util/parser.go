@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ttodorov/sensorcli/pkg/logger"
+	"github.com/Todorov99/sensorcli/pkg/logger"
 	yaml "gopkg.in/yaml.v2"
 )
 

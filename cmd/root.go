@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Todorov99/sensorcli/pkg/logger"
 	"github.com/spf13/cobra"
-	"github.com/ttodorov/sensorcli/pkg/logger"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"

@@ -24,9 +24,9 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/Todorov99/sensorcli/pkg/sensor"
+	"github.com/Todorov99/sensorcli/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/ttodorov/sensorcli/pkg/sensor"
-	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 var (
