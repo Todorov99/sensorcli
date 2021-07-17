@@ -18,22 +18,18 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/Todorov99/sensorcli/pkg/sensor"
-	"github.com/Todorov99/sensorcli/pkg/util"
-	"github.com/Todorov99/sensorcli/pkg/writer"
 	"github.com/spf13/cobra"
 )
 
 var (
 	format        string
 	deltaDuration int64
-	sensorGroup   []string
+	sensorGroups  []string
 	totalDuration float64
 	file          string
 	webHook       string
@@ -88,73 +84,10 @@ func init() {
 	cpuCmd.Flags().Float64Var(&totalDuration, "total_duration", 60.0, "Terminating the whole program after specified duration")
 	cpuCmd.Flags().StringVar(&webHook, "web_hook_url", "", "Expose to current port.")
 
-	cpuCmd.Flags().StringSliceVar(&sensorGroup, "sensor_group", []string{""}, "There are three main sensor groups: CPU_TEMP, CPU_USAGE and MEMORY_USAGE.")
-}
-
-func getDeltaDurationInSeconds() time.Duration {
-	return time.Duration(deltaDuration) * time.Second
-}
-
-func getTotalDurationInSeconds() time.Duration {
-	return time.Duration(totalDuration) * time.Second
-}
-
-func getSensorInfo(ctx context.Context, sensorGroup string) ([]sensor.Measurment, error) {
-	if sensorGroup == "" {
-		cmdLogger.Errorf("invalid sensor group")
-		return nil, fmt.Errorf("invalid sensor group")
-	}
-
-	sensorType, err := sensor.NewSensor(sensorGroup)
-	if err != nil {
-		cmdLogger.Error(err)
-		return nil, err
-	}
-
-	err = sensorType.ValidateUnit()
-	if err != nil {
-		cmdLogger.Error(err)
-		return nil, err
-	}
-
-	err = sensorType.ValidateFormat(format)
-	if err != nil {
-		cmdLogger.Error(err)
-		return nil, err
-	}
-
-	sensorInfo, err := sensorType.GetSensorData(ctx, format)
-	if err != nil {
-		cmdLogger.Error(err)
-		return nil, err
-	}
-
-	return sensorInfo, nil
-}
-
-func getMultipleSensorsMeasurements(ctx context.Context) ([]sensor.Measurment, error) {
-	var multipleSensorsData []sensor.Measurment
-
-	for i := 0; i < len(sensorGroup); i++ {
-
-		var currentSensorGroupData []sensor.Measurment
-
-		currentSensorGroupData, err := getSensorInfo(ctx, sensorGroup[i])
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < len(currentSensorGroupData); j++ {
-			multipleSensorsData = append(multipleSensorsData, currentSensorGroupData[j])
-		}
-
-	}
-
-	return multipleSensorsData, nil
+	cpuCmd.Flags().StringSliceVar(&sensorGroups, "sensor_group", []string{""}, "There are three main sensor groups: CPU_TEMP, CPU_USAGE and MEMORY_USAGE.")
 }
 
 func terminateForTotalDuration(ctx context.Context) error {
-
 	appTerminaitingDuration := time.After(getTotalDurationInSeconds())
 
 	for {
@@ -166,13 +99,13 @@ func terminateForTotalDuration(ctx context.Context) error {
 			return nil
 		default:
 
-			multipleSensorsData, err := getMultipleSensorsMeasurements(ctx)
+			multipleSensorsData, err := getMultipleSensorsMeasurements(ctx, sensorGroups)
 			if err != nil {
 				cmdLogger.Error(err)
 				return err
 			}
 
-			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
+			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData, getDeltaDurationInSeconds())
 			if err != nil {
 				return err
 			}
@@ -181,67 +114,12 @@ func terminateForTotalDuration(ctx context.Context) error {
 
 }
 
-func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Measurment) error {
-	cmdLogger.Info("Getting measurements in delta duration...")
-
-	measurementDuration := time.After(getDeltaDurationInSeconds())
-	done := make(chan bool)
-	sensorsData := sendSensorData(sensorData, done)
-
-	defer func() {
-		close(done)
-	}()
-
-	for {
-		select {
-		case data := <-sensorsData:
-
-			if webHook != "" {
-				webHookURL(webHook, util.ParseDataAccordingToFormat("JSON", data))
-			}
-
-			if file != "" {
-
-				go func() {
-					var sensorsData []string
-					sensorsData = append(sensorsData, util.ParseDataAccordingToFormat(format, sensorData))
-					err := writer.WriteOutputToCSV(sensorsData, file)
-					if err != nil {
-						cmdLogger.Errorf("error during writing in CSV file: %w", err)
-					}
-				}()
-			}
-
-			fmt.Println(util.ParseDataAccordingToFormat(format, data))
-		case <-measurementDuration:
-			done <- true
-			return nil
-		case <-ctx.Done():
-			done <- true
-			cmdLogger.Error(ctx.Err())
-			return ctx.Err()
-		}
-	}
-
+func getDeltaDurationInSeconds() time.Duration {
+	return time.Duration(deltaDuration) * time.Second
 }
 
-func sendSensorData(sensorsInfo []sensor.Measurment, done chan bool) <-chan sensor.Measurment {
-	cmdLogger.Info("Sending sensor data...")
-
-	out := make(chan sensor.Measurment)
-
-	go func() {
-		for _, currentSensorInfo := range sensorsInfo {
-			out <- currentSensorInfo
-		}
-
-		if <-done {
-			close(out)
-			return
-		}
-	}()
-
-	return out
+func getTotalDurationInSeconds() time.Duration {
+	return time.Duration(totalDuration) * time.Second
 }
 
 //TODO integrate with http server
