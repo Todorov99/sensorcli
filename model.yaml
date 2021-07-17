@@ -5,7 +5,7 @@
       description: my laptop device
       sensors:
       - id: 1
-        name: cpuTempCelsius
+        name: cpuTemp
         description: Measures CPU temp Celsius
         unit: C
         sensorGroups:
@@ -16,7 +16,7 @@
         #sensorId: 1
         #deviceId: 1
       - id: 3
-        name: cpuCoresCount
+        name: cpuCores
         description: Measures CPU cores count
         unit: count
         sensorGroups:
@@ -30,7 +30,7 @@
         - CPU_USAGE
         measurements: []
       - id: 2
-        name: cpuUsagePercent
+        name: cpuUsage
         description: Measures CPU usage percent
         unit: "%"
         sensorGroups:
@@ -39,27 +39,27 @@
       - id: 5
         name: memoryTotal
         description: Measures memory total
-        unit: GigaBytes
-        sensorGroups:
-        - MEMORY_USAGE
-        measurements: []
-      - id: 6
-        name: memoryAvailableBytes
-        description: Measures memory available Bytes
         unit: Bytes
         sensorGroups:
         - MEMORY_USAGE
         measurements: []
+      - id: 6
+        name: memoryAvailable
+        description: Measures memory available Bytes
+        unit: GigaBytes
+        sensorGroups:
+        - MEMORY_USAGE
+       # measurements: []
       - id: 7
-        name: memoryUsedBytes
-        description: Measures memory used Bytes
+        name: memoryUsed
+        description: Used RAM from the programs
         unit: Bytes
         sensorGroups:
         - MEMORY_USAGE
         measurements: []
       - id: 8
         name: memoryUsedPercent
-        description: Measures memory used percent
+        description: Used percentage RAM from the programs
         unit: "%"
         sensorGroups:
         - MEMORY_USAGE

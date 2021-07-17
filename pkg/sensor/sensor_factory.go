@@ -9,7 +9,7 @@ import (
 var sensorLogger logger.Logger = logger.NewLogger("./sensor")
 
 // CreateSensor sensor type instance.
-func CreateSensor(sensorType string) (ISensor, error) {
+func NewSensor(sensorType string) (ISensor, error) {
 
 	switch sensorType {
 	case tempSensor:

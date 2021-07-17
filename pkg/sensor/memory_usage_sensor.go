@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/ttodorov/sensorcli/pkg/util"
 )
@@ -13,14 +14,21 @@ const (
 	memorySensor string = "MEMORY_USAGE"
 )
 
-type cpuMemorySensor Measurment
+type cpuMemorySensor struct {
+	totalMemory       string
+	availableMemory   string
+	usedMemory        string
+	usedPercentMemory string
+	deviceID          string
+	sensors           []sensor
+}
 
 // CreateMemorySensor creates instance of memory sensor.
 func CreateMemorySensor() ISensor {
 	return &cpuMemorySensor{}
 }
 
-func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, unit, format string) ([]string, error) {
+func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
 	sensorLogger.Info("Gerring sensor data...")
 	memoryUsageData, err := getMemoryUsageData(ctx, format)
 	if err != nil {
@@ -32,13 +40,42 @@ func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, unit, format 
 	return memoryUsageData, nil
 }
 
-func (memoryS *cpuMemorySensor) Validate(arguments ...string) error {
-	return util.ValidateFormat(arguments[0])
+func (memoryS *cpuMemorySensor) ValidateFormat(format string) error {
+	return util.ValidateFormat(format)
+}
+
+func (memoryS *cpuMemorySensor) ValidateUnit() error {
+	sensorLogger.Info("Validating memory sensor units...")
+
+	var err error
+	for _, currentSensor := range memoryS.sensors {
+		if currentSensor.Unit != "MegaBytes" &&
+			currentSensor.Unit != "%" && currentSensor.Unit != "Bytes" &&
+			currentSensor.Unit != "Kilobytes" && currentSensor.Unit != "GigaBytes" {
+			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		}
+	}
+
+	return nil
 }
 
 func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
 	sensorLogger.Info("Getting memory usage data...")
 	var memoryData []string
+
+	deviceID, err := devices.getDeviceID()
+	if err != nil {
+		msg := "failed to get deviceID: %w"
+		sensorLogger.Errorf(msg, err)
+		return nil, fmt.Errorf(msg, err)
+	}
+
+	sensors, err := devices.getDeviceSensorsByGroup(memorySensor)
+	if err != nil {
+		msg := "failed to get sensorID: %w"
+		sensorLogger.Errorf(msg, err)
+		return nil, fmt.Errorf(msg, err)
+	}
 
 	memoryUsageValues, err := getMemoryUsageValues(ctx)
 	if err != nil {
@@ -47,39 +84,31 @@ func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
 		return nil, fmt.Errorf(msg, err)
 	}
 
-	deviceID, err := devices.getDeviceID()
-	if err != nil {
-		msg := "failed to get deviceID: %w"
-		return nil, fmt.Errorf(msg, err)
-	}
+	memoryUsageValues.sensors = sensors
+	memoryUsageValues.deviceID = deviceID
 
-	sensorID, err := devices.getSensorID(memorySensor)
-	if err != nil {
-		msg := "failed to get sensorID: %w"
-		return nil, fmt.Errorf(msg, err)
-	}
-
-	for i := 0; i < len(memoryUsageValues); i++ {
-		memoryMeasurements := newMeasurement(memoryUsageValues[i], sensorID[i], deviceID)
-		memoryData = append(memoryData, util.ParseDataAccordingToFormat(format, memoryMeasurements))
+	measurements := newMeasurements(memoryUsageValues)
+	for _, m := range measurements {
+		memoryData = append(memoryData, util.ParseDataAccordingToFormat(format, m))
 	}
 
 	return memoryData, nil
 }
 
-func getMemoryUsageValues(ctx context.Context) ([]string, error) {
+func getMemoryUsageValues(ctx context.Context) (cpuMemorySensor, error) {
 	sensorLogger.Info("Getting memory usage data...")
+
 	memory, err := mem.VirtualMemoryWithContext(ctx)
 	if err != nil {
 		msg := "failed to get virtual memory: %w"
 		sensorLogger.Errorf(msg, err)
-		return nil, fmt.Errorf(msg, err)
+		return cpuMemorySensor{}, fmt.Errorf(msg, err)
 	}
 
-	totalMemory := strconv.FormatUint(memory.Total, 10)
-	availableMemory := strconv.FormatUint(memory.Total, 10)
-	usedMemory := strconv.FormatUint(memory.Used, 10)
-	usedPercentMemory := strconv.FormatFloat(memory.UsedPercent, 'f', 2, 64)
-
-	return []string{totalMemory, availableMemory, usedMemory, usedPercentMemory}, nil
+	return cpuMemorySensor{
+		totalMemory:       strconv.FormatUint(memory.Total, 10),
+		availableMemory:   strconv.FormatUint(memory.Available, 10),
+		usedMemory:        strconv.FormatUint(memory.Used, 10),
+		usedPercentMemory: strconv.FormatFloat(memory.UsedPercent, 'f', 2, 64),
+	}, nil
 }

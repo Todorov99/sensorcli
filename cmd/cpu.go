@@ -28,6 +28,15 @@ import (
 	"github.com/ttodorov/sensorcli/pkg/sensor"
 )
 
+var (
+	format        string
+	deltaDuration int64
+	sensorGroup   []string
+	totalDuration float64
+	file          string
+	webHook       string
+)
+
 // cpuCmd represents the cpu command
 var cpuCmd = &cobra.Command{
 	Use:   "cpu",
@@ -60,7 +69,7 @@ to quickly create a Cobra application.`,
 
 		err := terminateForTotalDuration(ctx)
 		if err != nil {
-			rootLogger.Error(err)
+			cmdLogger.Error(err)
 			return err
 		}
 
@@ -90,29 +99,31 @@ func getTotalDurationInSeconds() time.Duration {
 
 func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 	if sensorGroup == "" {
-		rootLogger.Errorf("invalid sensor group")
+		cmdLogger.Errorf("invalid sensor group")
 		return nil, fmt.Errorf("invalid sensor group")
 	}
 
-	sensorType, err := sensor.CreateSensor(sensorGroup)
+	sensorType, err := sensor.NewSensor(sensorGroup)
 	if err != nil {
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	err = sensorType.Validate(format)
+	err = sensorType.ValidateUnit()
 	if err != nil {
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	unit, err := sensor.GetSensorUnit(sensorGroup)
+	err = sensorType.ValidateFormat(format)
 	if err != nil {
-		rootLogger.Errorf(err.Error())
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	sensorInfo, err := sensorType.GetSensorData(ctx, unit, format)
+	sensorInfo, err := sensorType.GetSensorData(ctx, format)
 	if err != nil {
-		rootLogger.Errorf(err.Error())
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
@@ -147,7 +158,7 @@ func terminateForTotalDuration(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			rootLogger.Error(ctx.Err())
+			cmdLogger.Error(ctx.Err())
 			return ctx.Err()
 		case <-appTerminaitingDuration:
 			return nil
@@ -155,13 +166,13 @@ func terminateForTotalDuration(ctx context.Context) error {
 
 			multipleSensorsData, err := getMultipleSensorsMeasurements(ctx)
 			if err != nil {
-				rootLogger.Error(err)
+				cmdLogger.Error(err)
 				return err
 			}
 
 			if file != "" {
 				go sensor.WriteOutputToCSV(multipleSensorsData, file)
-				rootLogger.Info("Writing sensor measurements in CSV file.")
+				cmdLogger.Info("Writing sensor measurements in CSV file.")
 			}
 
 			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
@@ -192,7 +203,7 @@ func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) er
 			return nil
 		case <-ctx.Done():
 			done <- true
-			rootLogger.Error(ctx.Err())
+			cmdLogger.Error(ctx.Err())
 			return ctx.Err()
 		}
 	}

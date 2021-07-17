@@ -26,16 +26,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var rootLogger logger.Logger = logger.NewLogger("./root")
+var cmdLogger logger.Logger = logger.NewLogger("./cmd")
 
 var (
-	cfgFile       string
-	format        string
-	deltaDuration int64
-	sensorGroup   []string
-	totalDuration float64
-	file          string
-	webHook       string
+	cfgFile string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -46,31 +40,6 @@ var rootCmd = &cobra.Command{
 	cpu usage data and memory usage data from the sensors of your local PC.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// ctx := context.Background()
-
-		// ctx, cancel := context.WithCancel(ctx)
-		// interuptSignal := make(chan os.Signal, 1)
-
-		// signal.Notify(interuptSignal, os.Interrupt)
-		// defer func() {
-		// 	signal.Stop(interuptSignal)
-		// 	cancel()
-		// }()
-
-		// go func() {
-		// 	select {
-		// 	case <-interuptSignal:
-		// 		cancel()
-		// 	case <-ctx.Done():
-		// 	}
-		// }()
-
-		// err := terminateForTotalDuration(ctx)
-		// if err != nil {
-		// 	rootLogger.Error(err)
-		// 	return err
-		// }
-
 		return nil
 	},
 }
@@ -83,15 +52,6 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// rootCmd.Flags().StringVar(&format, "format", "JSON", "The data could be printed either JSON or YAML format.")
-	// rootCmd.Flags().Int64Var(&deltaDuration, "delta_duration", 3, "The period of which you will get your sensor data.")
-	// rootCmd.Flags().StringVar(&file, "output_file", "", "Writing the output into CSV file.")
-	// rootCmd.Flags().Float64Var(&totalDuration, "total_duration", 60.0, "Terminating the whole program after specified duration")
-	// rootCmd.Flags().StringVar(&webHook, "web_hook_url", "", "Expose to current port.")
-
-	// rootCmd.Flags().StringSliceVar(&sensorGroup, "sensor_group", []string{""}, "There are three main sensor groups: CPU_TEMP, CPU_USAGE and MEMORY_USAGE.")
-
 }
 
 // initConfig reads in config file and ENV variables if set.

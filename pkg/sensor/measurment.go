@@ -1,9 +1,13 @@
 package sensor
 
-import "time"
+import (
+	"time"
+
+	"github.com/ttodorov/sensorcli/pkg/util"
+)
 
 // Measurment model
-type Measurment struct {
+type measurment struct {
 	MeasuredAt time.Time `json:"measuredAt" yaml:"measuredAt"`
 	Value      string    `json:"value" yaml:"value"`
 	SensorID   string    `json:"sensorId" yaml:"sensorId"`
@@ -11,6 +15,68 @@ type Measurment struct {
 }
 
 // SetMeasurementValues sets property fields of measurement model.
-func newMeasurement(value string, sensorID string, deviceID string) Measurment {
-	return Measurment{time.Now(), value, sensorID, deviceID}
+func newMeasurement(value string, sensorID string, deviceID string) measurment {
+	return measurment{time.Now(), value, sensorID, deviceID}
+}
+
+func newMeasurements(info interface{}) []measurment {
+	var m = []measurment{}
+	switch v := info.(type) {
+	case cpuUsageSensor:
+		for _, s := range v.sensors {
+			switch s.Name {
+			case cpuCoresCount:
+				m = append(m, newMeasurement(v.cpuCores, s.ID, v.deviceID))
+			case cpuFrequency:
+				m = append(m, newMeasurement(v.cpuFrequency, s.ID, v.deviceID))
+			case cpuUsagePercent:
+				m = append(m, newMeasurement(v.cpuUsage, s.ID, v.deviceID))
+			}
+
+		}
+	case cpuMemorySensor:
+		for _, s := range v.sensors {
+			switch s.Name {
+			case memoryAvailable:
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.availableMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
+			case memoryUsed:
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.usedMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
+			case memoryTotal:
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.totalMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
+			case memoryUsedPercent:
+				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.usedPercentMemory)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
+			}
+
+		}
+	case cpuTempSensor:
+		for _, s := range v.sensors {
+			switch s.Name {
+			case cpuTempCelsius:
+				val, err := util.ParseTempAccordingToUnit(s.Unit, v.cpuTemp)
+				if err != nil {
+					sensorLogger.Error(err)
+				}
+				m = append(m, newMeasurement(val, s.ID, v.deviceID))
+			}
+
+		}
+	}
+
+	return m
 }
