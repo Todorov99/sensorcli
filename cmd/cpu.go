@@ -26,6 +26,7 @@ import (
 
 	"github.com/Todorov99/sensorcli/pkg/sensor"
 	"github.com/Todorov99/sensorcli/pkg/util"
+	"github.com/Todorov99/sensorcli/pkg/writer"
 	"github.com/spf13/cobra"
 )
 
@@ -171,13 +172,6 @@ func terminateForTotalDuration(ctx context.Context) error {
 				return err
 			}
 
-			if file != "" {
-				cmdLogger.Info("Writing sensor measurements in CSV file.")
-				var data []string
-				data = append(data, util.ParseDataAccordingToFormat(format, multipleSensorsData))
-				go sensor.WriteOutputToCSV(data, file)
-			}
-
 			err = getMeasurementsInDeltaDuration(ctx, multipleSensorsData)
 			if err != nil {
 				return err
@@ -194,12 +188,28 @@ func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Mea
 	done := make(chan bool)
 	sensorsData := sendSensorData(sensorData, done)
 
+	defer func() {
+		close(done)
+	}()
+
 	for {
 		select {
 		case data := <-sensorsData:
 
 			if webHook != "" {
 				webHookURL(webHook, util.ParseDataAccordingToFormat("JSON", data))
+			}
+
+			if file != "" {
+
+				go func() {
+					var sensorsData []string
+					sensorsData = append(sensorsData, util.ParseDataAccordingToFormat(format, sensorData))
+					err := writer.WriteOutputToCSV(sensorsData, file)
+					if err != nil {
+						cmdLogger.Errorf("error during writing in CSV file: %w", err)
+					}
+				}()
 			}
 
 			fmt.Println(util.ParseDataAccordingToFormat(format, data))
@@ -213,12 +223,6 @@ func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Mea
 		}
 	}
 
-}
-
-//TODO integrate with http server
-func webHookURL(url string, data string) {
-	var json = []byte(data)
-	http.Post(url, "application/json", bytes.NewBuffer(json))
 }
 
 func sendSensorData(sensorsInfo []sensor.Measurment, done chan bool) <-chan sensor.Measurment {
@@ -238,4 +242,10 @@ func sendSensorData(sensorsInfo []sensor.Measurment, done chan bool) <-chan sens
 	}()
 
 	return out
+}
+
+//TODO integrate with http server
+func webHookURL(url string, data string) {
+	var json = []byte(data)
+	http.Post(url, "application/json", bytes.NewBuffer(json))
 }

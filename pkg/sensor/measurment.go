@@ -6,7 +6,7 @@ import (
 	"github.com/Todorov99/sensorcli/pkg/util"
 )
 
-// Measurment model
+// Measurment is struct type that holds inforamation about different sensor metrics
 type Measurment struct {
 	MeasuredAt time.Time `json:"measuredAt" yaml:"measuredAt"`
 	Value      string    `json:"value" yaml:"value"`
@@ -14,7 +14,6 @@ type Measurment struct {
 	DeviceID   string    `json:"deviceId" yaml:"deviceId"`
 }
 
-// SetMeasurementValues sets property fields of measurement model.
 func newMeasurement(value string, sensorID string, deviceID string) Measurment {
 	return Measurment{time.Now(), value, sensorID, deviceID}
 }
@@ -25,11 +24,11 @@ func newMeasurements(info interface{}) []Measurment {
 	case cpuUsageSensor:
 		for _, s := range v.sensors {
 			switch s.Name {
-			case cpuCoresCount:
+			case cpuCores:
 				m = append(m, newMeasurement(v.cpuCores, s.ID, v.deviceID))
 			case cpuFrequency:
 				m = append(m, newMeasurement(v.cpuFrequency, s.ID, v.deviceID))
-			case cpuUsagePercent:
+			case cpuUsage:
 				m = append(m, newMeasurement(v.cpuUsage, s.ID, v.deviceID))
 			}
 
@@ -67,7 +66,7 @@ func newMeasurements(info interface{}) []Measurment {
 	case cpuTempSensor:
 		for _, s := range v.sensors {
 			switch s.Name {
-			case cpuTempCelsius:
+			case cpuTemp:
 				val, err := util.ParseTempAccordingToUnit(s.Unit, v.cpuTemp)
 				if err != nil {
 					sensorLogger.Error(err)

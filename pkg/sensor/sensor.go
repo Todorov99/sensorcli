@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// Sensor model
 type sensor struct {
 	ID           string       `json:"id" yaml:"id"`
 	Name         string       `json:"name" yaml:"name"`
@@ -18,11 +17,11 @@ func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSens
 
 	switch sensorName {
 
-	case cpuTempCelsius:
+	case cpuTemp:
 		return currentSensorID, nil
-	case cpuUsagePercent:
+	case cpuUsage:
 		return currentSensorID, nil
-	case cpuCoresCount:
+	case cpuCores:
 		return currentSensorID, nil
 	case cpuFrequency:
 		return currentSensorID, nil
@@ -37,5 +36,5 @@ func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSens
 
 	}
 
-	return "", fmt.Errorf("there is not such sensor name")
+	return "", fmt.Errorf("there is not such sensor name: %q", sensorName)
 }

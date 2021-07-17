@@ -65,7 +65,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, err
 
 	deviceID, err := devices.getDeviceID()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get device id: %w", err)
 	}
 
 	sensors, err := devices.getDeviceSensorsByGroup(usageSensor)
@@ -75,7 +75,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, err
 
 	cpuInfo, err := newCPUUsageInfo(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get cpuInfo: %w", err)
 	}
 
 	cpuInfo.deviceID = deviceID

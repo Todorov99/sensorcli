@@ -61,3 +61,8 @@ To run all unit tests successfully first change fileFullPath variable with the f
         
     2. Run unit test for current package:
         -   ginkgo <package realtive path> - For example: ginkgo ./utils
+
+## Use as go mod
+
+export GOPRIVATE=github.com/Todorov99
+go get -u github.com/Todorov99/sensorcli

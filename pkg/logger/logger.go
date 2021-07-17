@@ -30,6 +30,10 @@ func (l Logger) Info(v ...interface{}) {
 	l.infoLogger.Println(v...)
 }
 
+func (l Logger) Infof(msg string, args ...interface{}) {
+	l.infoLogger.Printf(msg, args...)
+}
+
 func (l Logger) Warn(v ...interface{}) {
 	l.warnLogger.Println(v...)
 }

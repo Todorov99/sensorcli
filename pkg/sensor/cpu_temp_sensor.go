@@ -29,7 +29,7 @@ func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([
 	sensorLogger.Info("Gerring sensor data...")
 	cpuTemp, err := getTempMeasurments(ctx, format)
 	if err != nil {
-		msg := "failed to get temperature measurements"
+		msg := "failed to get temperature measurements: %w"
 		sensorLogger.Errorf(msg, err)
 		return nil, fmt.Errorf(msg, err)
 	}

@@ -1,21 +1,16 @@
 package sensor
 
 import (
-	"encoding/csv"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	fileFullPath    string = "./model.yaml"
-	csvFileFullPath string = "./"
-
-	cpuTempCelsius    string = "cpuTempCelsius"
-	cpuCoresCount     string = "cpuCoresCount"
-	cpuUsagePercent   string = "cpuUsagePercent"
+	cpuTemp           string = "cpuTemp"
+	cpuCores          string = "cpuCores"
+	cpuUsage          string = "cpuUsage"
 	cpuFrequency      string = "cpuFrequency"
 	memoryTotal       string = "memoryTotal"
 	memoryAvailable   string = "memoryAvailable"
@@ -23,11 +18,12 @@ const (
 	memoryUsedPercent string = "memoryUsedPercent"
 )
 
+var modelFilePath string = "./model.yaml"
+
 var devices *Diveces
 
-// load the content of the model.yaml file
 func init() {
-	fileName, err := filepath.Abs("./model.yaml")
+	fileName, err := filepath.Abs(modelFilePath)
 	if err != nil {
 		sensorLogger.Panic(err)
 	}
@@ -44,34 +40,8 @@ func init() {
 
 }
 
-// WriteOutputToCSV measurement output to CSV file.
-func WriteOutputToCSV(data []string, csvFileName string) error {
-
-	fileName := csvFileFullPath + csvFileName + ".csv"
-
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	writer.Comma = '|'
-
-	writingErr := writer.Write(data)
-	if writingErr != nil {
-		return nil
-	}
-
-	return nil
-}
-
 // //ReadFileSystemFile reads server temperature from filesystem file.
 func ReadFileSystemFile(fileSystemPath string) (float64, error) {
-
 	fileName, err := filepath.Abs(fileSystemPath)
 
 	fileContent, err := ioutil.ReadFile(fileName)
