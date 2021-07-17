@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Todorov99/sensorcli/pkg/util"
 	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 const (

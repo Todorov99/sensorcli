@@ -3,7 +3,7 @@ package sensor
 import (
 	"time"
 
-	"github.com/ttodorov/sensorcli/pkg/util"
+	"github.com/Todorov99/sensorcli/pkg/util"
 )
 
 // Measurment model

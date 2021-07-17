@@ -3,7 +3,7 @@ package sensor
 import (
 	"fmt"
 
-	"github.com/ttodorov/sensorcli/pkg/logger"
+	"github.com/Todorov99/sensorcli/pkg/logger"
 )
 
 var sensorLogger logger.Logger = logger.NewLogger("./sensor")

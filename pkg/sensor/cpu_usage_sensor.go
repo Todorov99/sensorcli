@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Todorov99/sensorcli/pkg/util"
 	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/cpu"
-	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 const (
