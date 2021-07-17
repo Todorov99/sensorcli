@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/ttodorov/sensorcli/pkg/util"
 )
@@ -28,18 +29,28 @@ func CreateUsageSensor() ISensor {
 	return &cpuUsageSensor{}
 }
 
-func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, unit []string, format string) ([]string, error) {
-	cpuUsage, err := getUsageMeasurements(ctx, format)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return cpuUsage, nil
+func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
+	return getUsageMeasurements(ctx, format)
 }
 
-func (usageS *cpuUsageSensor) Validate(arguments ...string) error {
-	return util.ValidateFormat(arguments[0])
+func (usageS *cpuUsageSensor) ValidateFormat(format string) error {
+	return util.ValidateFormat(format)
+}
+
+func (usageS *cpuUsageSensor) ValidateUnit() error {
+	sensorLogger.Info("Validating usage sensor units...")
+
+	var err error
+	for _, currentSensor := range usageS.sensors {
+		if currentSensor.Unit != "GHz" &&
+			currentSensor.Unit != "%" &&
+			currentSensor.Unit != "count" &&
+			currentSensor.Unit != "Hz" {
+			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		}
+	}
+
+	return err
 }
 
 func getUsageMeasurements(ctx context.Context, format string) ([]string, error) {
@@ -50,12 +61,12 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 		return nil, err
 	}
 
-	sensors, err := devices.getSensorsByGroup(usageSensor)
+	sensors, err := devices.getDeviceSensorsByGroup(usageSensor)
 	if err != nil {
 		return nil, err
 	}
 
-	cpuInfo, err := getCPUUsageInfo(ctx)
+	cpuInfo, err := newCPUUsageInfo(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +81,24 @@ func getUsageMeasurements(ctx context.Context, format string) ([]string, error) 
 	}
 
 	return usageData, nil
+}
+
+func newCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
+	cores, frequency, err := getCPUCoresAndFrequency(ctx)
+	if err != nil {
+		return cpuUsageSensor{}, err
+	}
+
+	usage, err := getUsedPercent(ctx)
+	if err != nil {
+		return cpuUsageSensor{}, err
+	}
+
+	return cpuUsageSensor{
+		cpuCores:     cores,
+		cpuFrequency: frequency,
+		cpuUsage:     usage,
+	}, nil
 }
 
 func getCPUCoresAndFrequency(ctx context.Context) (string, string, error) {
@@ -102,22 +131,4 @@ func getUsedPercent(ctx context.Context) (string, error) {
 	usedPercentage := cpuUsedPercentage[0] / 100
 
 	return strconv.FormatFloat(usedPercentage, 'f', 2, 64), nil
-}
-
-func getCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
-	cores, frequency, err := getCPUCoresAndFrequency(ctx)
-	if err != nil {
-		return cpuUsageSensor{}, err
-	}
-
-	usage, err := getUsedPercent(ctx)
-	if err != nil {
-		return cpuUsageSensor{}, err
-	}
-
-	return cpuUsageSensor{
-		cpuCores:     cores,
-		cpuFrequency: frequency,
-		cpuUsage:     usage,
-	}, nil
 }

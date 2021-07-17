@@ -14,42 +14,6 @@ type sensor struct {
 	Measurments  []measurment `json:"measurements" yaml:"measurements"`
 }
 
-func (d *Diveces) getSensorsByGroup(sensorGroup string) ([]sensor, error) {
-	var sensorsIds []sensor
-
-	for _, currentSensor := range d.Devices[0].Sensors {
-
-		if currentSensor.SensorGroups[0] == sensorGroup {
-
-			_, err := currentSensor.getSensorIDAccordingToSensorName(currentSensor.Name, currentSensor.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			sensorsIds = append(sensorsIds, currentSensor)
-		}
-	}
-
-	return sensorsIds, nil
-}
-
-// GetTempSensorUnit gets current unit for temperature sensor measurment.
-func GetSensorUnits(sensorGroup string) ([]string, error) {
-	sensorLogger.Info("Getting current unit for temperature sensor")
-	units := []string{}
-
-	for _, currentsensor := range devices.Devices[0].Sensors {
-		for _, sgr := range currentsensor.SensorGroups {
-
-			if sgr == sensorGroup {
-				units = append(units, currentsensor.Unit)
-			}
-		}
-	}
-
-	return units, nil
-}
-
 func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
 
 	switch sensorName {
@@ -64,9 +28,9 @@ func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSens
 		return currentSensorID, nil
 	case memoryTotal:
 		return currentSensorID, nil
-	case memoryAvailableBytes:
+	case memoryAvailable:
 		return currentSensorID, nil
-	case memoryUsedBytes:
+	case memoryUsed:
 		return currentSensorID, nil
 	case memoryUsedPercent:
 		return currentSensorID, nil

@@ -37,13 +37,13 @@ func newMeasurements(info interface{}) []measurment {
 	case cpuMemorySensor:
 		for _, s := range v.sensors {
 			switch s.Name {
-			case memoryAvailableBytes:
+			case memoryAvailable:
 				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.availableMemory)
 				if err != nil {
 					sensorLogger.Error(err)
 				}
 				m = append(m, newMeasurement(val, s.ID, v.deviceID))
-			case memoryUsedBytes:
+			case memoryUsed:
 				val, err := util.ParseMemoryUsageAccordingToUnit(s.Unit, v.usedMemory)
 				if err != nil {
 					sensorLogger.Error(err)

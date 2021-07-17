@@ -39,14 +39,14 @@
       - id: 5
         name: memoryTotal
         description: Measures memory total
-        unit: GigaBytes
+        unit: Bytes
         sensorGroups:
         - MEMORY_USAGE
         measurements: []
       - id: 6
         name: memoryAvailable
         description: Measures memory available Bytes
-        unit: MegaBytes
+        unit: GigaBytes
         sensorGroups:
         - MEMORY_USAGE
        # measurements: []

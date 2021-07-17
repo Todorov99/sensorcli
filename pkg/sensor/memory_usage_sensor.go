@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/ttodorov/sensorcli/pkg/util"
 )
@@ -27,9 +28,9 @@ func CreateMemorySensor() ISensor {
 	return &cpuMemorySensor{}
 }
 
-func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, units []string, format string) ([]string, error) {
+func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
 	sensorLogger.Info("Gerring sensor data...")
-	memoryUsageData, err := getMemoryUsageData(ctx, units, format)
+	memoryUsageData, err := getMemoryUsageData(ctx, format)
 	if err != nil {
 		msg := "failed to get memory usage data: %w"
 		sensorLogger.Errorf(msg, err)
@@ -39,11 +40,26 @@ func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, units []strin
 	return memoryUsageData, nil
 }
 
-func (memoryS *cpuMemorySensor) Validate(arguments ...string) error {
-	return util.ValidateFormat(arguments[0])
+func (memoryS *cpuMemorySensor) ValidateFormat(format string) error {
+	return util.ValidateFormat(format)
 }
 
-func getMemoryUsageData(ctx context.Context, units []string, format string) ([]string, error) {
+func (memoryS *cpuMemorySensor) ValidateUnit() error {
+	sensorLogger.Info("Validating memory sensor units...")
+
+	var err error
+	for _, currentSensor := range memoryS.sensors {
+		if currentSensor.Unit != "MegaBytes" &&
+			currentSensor.Unit != "%" && currentSensor.Unit != "Bytes" &&
+			currentSensor.Unit != "Kilobytes" && currentSensor.Unit != "GigaBytes" {
+			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		}
+	}
+
+	return nil
+}
+
+func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
 	sensorLogger.Info("Getting memory usage data...")
 	var memoryData []string
 
@@ -54,7 +70,7 @@ func getMemoryUsageData(ctx context.Context, units []string, format string) ([]s
 		return nil, fmt.Errorf(msg, err)
 	}
 
-	sensors, err := devices.getSensorsByGroup(memorySensor)
+	sensors, err := devices.getDeviceSensorsByGroup(memorySensor)
 	if err != nil {
 		msg := "failed to get sensorID: %w"
 		sensorLogger.Errorf(msg, err)

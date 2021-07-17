@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/shirou/gopsutil/host"
 	"github.com/ttodorov/sensorcli/pkg/util"
 )
@@ -24,9 +25,9 @@ func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, unit []string, format string) ([]string, error) {
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
 	sensorLogger.Info("Gerring sensor data...")
-	cpuTemp, err := getTempMeasurments(ctx, unit, format)
+	cpuTemp, err := getTempMeasurments(ctx, format)
 	if err != nil {
 		msg := "failed to get temperature measurements"
 		sensorLogger.Errorf(msg, err)
@@ -36,14 +37,26 @@ func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, unit []string, fo
 	return cpuTemp, nil
 }
 
-func (tempS *cpuTempSensor) Validate(arguments ...string) error {
-	return util.ValidateFormat(arguments[0])
+func (tempS *cpuTempSensor) ValidateFormat(format string) error {
+	return util.ValidateFormat(format)
 }
 
-func getTempMeasurments(ctx context.Context, units []string, format string) ([]string, error) {
+func (tempS *cpuTempSensor) ValidateUnit() error {
+	sensorLogger.Info("Validating temperature sensor units...")
+	var err error
+	for _, currentSensor := range tempS.sensors {
+		if currentSensor.Unit != "F" && currentSensor.Unit != "C" {
+			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		}
+	}
+
+	return err
+}
+
+func getTempMeasurments(ctx context.Context, format string) ([]string, error) {
 	var tempData []string
 
-	cpuTempInfo, err := getTempFromSensor(ctx, units[0])
+	cpuTempInfo, err := getTempFromSensor(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +66,7 @@ func getTempMeasurments(ctx context.Context, units []string, format string) ([]s
 		return nil, err
 	}
 
-	sensor, err := devices.getSensorsByGroup(tempSensor)
+	sensor, err := devices.getDeviceSensorsByGroup(tempSensor)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +82,7 @@ func getTempMeasurments(ctx context.Context, units []string, format string) ([]s
 	return tempData, nil
 }
 
-func getTempFromSensor(ctx context.Context, unit string) (cpuTempSensor, error) {
+func getTempFromSensor(ctx context.Context) (cpuTempSensor, error) {
 	sensorLogger.Info("Getting temperature from sensor")
 	sensorTeperatureInfo, err := host.SensorsTemperaturesWithContext(ctx)
 	if err != nil {

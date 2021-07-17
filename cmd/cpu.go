@@ -105,25 +105,25 @@ func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 
 	sensorType, err := sensor.NewSensor(sensorGroup)
 	if err != nil {
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	err = sensorType.Validate(format)
+	err = sensorType.ValidateUnit()
 	if err != nil {
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	unit, err := sensor.GetSensorUnits(sensorGroup)
+	err = sensorType.ValidateFormat(format)
 	if err != nil {
-		cmdLogger.Errorf(err.Error())
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
-	fmt.Println(unit)
-
-	sensorInfo, err := sensorType.GetSensorData(ctx, unit, format)
+	sensorInfo, err := sensorType.GetSensorData(ctx, format)
 	if err != nil {
-		cmdLogger.Errorf(err.Error())
+		cmdLogger.Error(err)
 		return nil, err
 	}
 
