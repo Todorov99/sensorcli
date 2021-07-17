@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/ttodorov/sensorcli/pkg/sensor"
+	"github.com/ttodorov/sensorcli/pkg/util"
 )
 
 var (
@@ -97,7 +98,7 @@ func getTotalDurationInSeconds() time.Duration {
 	return time.Duration(totalDuration) * time.Second
 }
 
-func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
+func getSensorInfo(ctx context.Context, sensorGroup string) ([]sensor.Measurment, error) {
 	if sensorGroup == "" {
 		cmdLogger.Errorf("invalid sensor group")
 		return nil, fmt.Errorf("invalid sensor group")
@@ -130,12 +131,12 @@ func getSensorInfo(ctx context.Context, sensorGroup string) ([]string, error) {
 	return sensorInfo, nil
 }
 
-func getMultipleSensorsMeasurements(ctx context.Context) ([]string, error) {
-	var multipleSensorsData []string
+func getMultipleSensorsMeasurements(ctx context.Context) ([]sensor.Measurment, error) {
+	var multipleSensorsData []sensor.Measurment
 
 	for i := 0; i < len(sensorGroup); i++ {
 
-		var currentSensorGroupData []string
+		var currentSensorGroupData []sensor.Measurment
 
 		currentSensorGroupData, err := getSensorInfo(ctx, sensorGroup[i])
 		if err != nil {
@@ -171,7 +172,9 @@ func terminateForTotalDuration(ctx context.Context) error {
 			}
 
 			if file != "" {
-				go sensor.WriteOutputToCSV(multipleSensorsData, file)
+				var data []string
+				data = append(data, util.ParseDataAccordingToFormat(format, multipleSensorsData))
+				go sensor.WriteOutputToCSV(data, file)
 				cmdLogger.Info("Writing sensor measurements in CSV file.")
 			}
 
@@ -184,7 +187,7 @@ func terminateForTotalDuration(ctx context.Context) error {
 
 }
 
-func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) error {
+func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Measurment) error {
 	measurementDuration := time.After(getDeltaDurationInSeconds())
 	done := make(chan bool)
 	sensorsData := sendSensorData(sensorData, done)
@@ -194,10 +197,10 @@ func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []string) er
 		case data := <-sensorsData:
 
 			if webHook != "" {
-				webHookURL(webHook, data)
+				webHookURL(webHook, util.ParseDataAccordingToFormat("JSON", data))
 			}
 
-			fmt.Println(data)
+			fmt.Println(util.ParseDataAccordingToFormat(format, data))
 		case <-measurementDuration:
 			done <- true
 			return nil
@@ -216,8 +219,8 @@ func webHookURL(url string, data string) {
 	http.Post(url, "application/json", bytes.NewBuffer(json))
 }
 
-func sendSensorData(sensorsInfo []string, done chan bool) <-chan string {
-	out := make(chan string)
+func sendSensorData(sensorsInfo []sensor.Measurment, done chan bool) <-chan sensor.Measurment {
+	out := make(chan sensor.Measurment)
 
 	go func() {
 		for _, currentSensorInfo := range sensorsInfo {

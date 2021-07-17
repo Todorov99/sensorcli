@@ -25,7 +25,7 @@ func CreateTempSensor() ISensor {
 	return &cpuTempSensor{}
 }
 
-func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
+func (tempS *cpuTempSensor) GetSensorData(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Gerring sensor data...")
 	cpuTemp, err := getTempMeasurments(ctx, format)
 	if err != nil {
@@ -53,8 +53,8 @@ func (tempS *cpuTempSensor) ValidateUnit() error {
 	return err
 }
 
-func getTempMeasurments(ctx context.Context, format string) ([]string, error) {
-	var tempData []string
+func getTempMeasurments(ctx context.Context, format string) ([]Measurment, error) {
+	//var tempData []string
 
 	cpuTempInfo, err := getTempFromSensor(ctx)
 	if err != nil {
@@ -74,12 +74,12 @@ func getTempMeasurments(ctx context.Context, format string) ([]string, error) {
 	cpuTempInfo.sensors = sensor
 	cpuTempInfo.deviceID = deviceID
 
-	measurements := newMeasurements(cpuTempInfo)
-	for _, m := range measurements {
-		tempData = append(tempData, util.ParseDataAccordingToFormat(format, m))
-	}
+	//measurements := newMeasurements(cpuTempInfo)
+	// for _, m := range measurements {
+	// 	tempData = append(tempData, util.ParseDataAccordingToFormat(format, m))
+	// }
 
-	return tempData, nil
+	return newMeasurements(cpuTempInfo), nil
 }
 
 func getTempFromSensor(ctx context.Context) (cpuTempSensor, error) {

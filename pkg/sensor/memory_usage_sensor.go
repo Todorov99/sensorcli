@@ -28,7 +28,7 @@ func CreateMemorySensor() ISensor {
 	return &cpuMemorySensor{}
 }
 
-func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, format string) ([]string, error) {
+func (memoryS *cpuMemorySensor) GetSensorData(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Gerring sensor data...")
 	memoryUsageData, err := getMemoryUsageData(ctx, format)
 	if err != nil {
@@ -59,9 +59,9 @@ func (memoryS *cpuMemorySensor) ValidateUnit() error {
 	return nil
 }
 
-func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
+func getMemoryUsageData(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Getting memory usage data...")
-	var memoryData []string
+	//var memoryData []string
 
 	deviceID, err := devices.getDeviceID()
 	if err != nil {
@@ -87,12 +87,12 @@ func getMemoryUsageData(ctx context.Context, format string) ([]string, error) {
 	memoryUsageValues.sensors = sensors
 	memoryUsageValues.deviceID = deviceID
 
-	measurements := newMeasurements(memoryUsageValues)
-	for _, m := range measurements {
-		memoryData = append(memoryData, util.ParseDataAccordingToFormat(format, m))
-	}
+	//measurements := newMeasurements(memoryUsageValues)
+	// for _, m := range measurements {
+	// 	memoryData = append(memoryData, util.ParseDataAccordingToFormat(format, m))
+	// }
 
-	return memoryData, nil
+	return newMeasurements(memoryUsageValues), nil
 }
 
 func getMemoryUsageValues(ctx context.Context) (cpuMemorySensor, error) {
