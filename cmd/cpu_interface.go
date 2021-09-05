@@ -96,11 +96,13 @@ func getMeasurementsInDeltaDuration(ctx context.Context, sensorData []sensor.Mea
 		case data := <-sensorsData:
 
 			if webHook != "" {
-				webHookURL(webHook, util.ParseDataAccordingToFormat("JSON", data))
+				go func() {
+					webHookURL(webHook, util.ParseDataAccordingToFormat("JSON", data))
+				}()
+
 			}
 
 			if file != "" {
-
 				go func() {
 					var sensorsData []string
 					sensorsData = append(sensorsData, util.ParseDataAccordingToFormat(format, sensorData))
