@@ -6,10 +6,11 @@ import (
 	"strconv"
 
 	"github.com/Todorov99/sensorcli/pkg/logger"
+	"github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
-var utilLogger logger.Logger = logger.NewLogger("./util")
+var utilLogger *logrus.Logger = logger.NewLogrus("./util")
 
 const (
 	unitTypeFahrenheit string = "F"
