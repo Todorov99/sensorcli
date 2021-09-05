@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/Todorov99/sensorcli/pkg/logger"
+	"github.com/sirupsen/logrus"
 )
 
-var sensorLogger logger.Logger = logger.NewLogger("./sensor")
+var sensorLogger *logrus.Logger = logger.NewLogrus("./sensor")
 
 // CreateSensor sensor type instance.
 func NewSensor(sensorType string) (ISensor, error) {
-
 	switch sensorType {
 	case tempSensor:
 		sensorLogger.Info("Getting temp sensor measurements.")

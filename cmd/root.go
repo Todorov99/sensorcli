@@ -20,13 +20,14 @@ import (
 	"os"
 
 	"github.com/Todorov99/sensorcli/pkg/logger"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var cmdLogger logger.Logger = logger.NewLogger("./cmd")
+var cmdLogger *logrus.Logger = logger.NewLogrus("./cmd")
 
 var (
 	cfgFile string

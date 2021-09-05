@@ -8,6 +8,7 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/shirou/gopsutil v3.21.6+incompatible
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/tklauser/go-sysconf v0.3.6 // indirect
