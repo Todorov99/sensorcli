@@ -122,7 +122,6 @@ func getTotalDurationInSeconds() time.Duration {
 	return time.Duration(totalDuration) * time.Second
 }
 
-//TODO integrate with http server
 func webHookURL(url string, data string) {
 	var json = []byte(data)
 	http.Post(url, "application/json", bytes.NewBuffer(json))
