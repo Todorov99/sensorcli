@@ -2,12 +2,7 @@ package sensor
 
 import (
 	"fmt"
-
-	"github.com/Todorov99/sensorcli/pkg/logger"
-	"github.com/sirupsen/logrus"
 )
-
-var sensorLogger *logrus.Logger = logger.NewLogrus("./sensor")
 
 // CreateSensor sensor type instance.
 func NewSensor(sensorType string) (ISensor, error) {

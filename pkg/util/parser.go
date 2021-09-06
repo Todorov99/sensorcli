@@ -10,7 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var utilLogger *logrus.Logger = logger.NewLogrus("./util")
+var utilLogger *logrus.Entry = logger.NewLogrus("./util")
 
 const (
 	unitTypeFahrenheit string = "F"

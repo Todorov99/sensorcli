@@ -27,7 +27,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cmdLogger *logrus.Logger = logger.NewLogrus("./cmd")
+var cmdLogger *logrus.Entry = logger.NewLogrus("./cmd")
 
 var (
 	cfgFile string
