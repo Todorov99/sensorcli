@@ -105,8 +105,8 @@ func (tempS *cpuTempSensor) getTempFromSensor(ctx context.Context) (cpuTempSenso
 		return tempSensor, err
 	}
 
-	if sensorTeperatureInfo[0].Temperature == 0 {
-		temp, err := readThermalFile(tempS.thermalFilePath)
+	if len(sensorTeperatureInfo) == 0 {
+		temp, err := readSysFile(tempS.thermalFilePath)
 		if err != nil {
 			return tempSensor, err
 		}
@@ -122,7 +122,7 @@ func (tempS *cpuTempSensor) getTempFromSensor(ctx context.Context) (cpuTempSenso
 	}, nil
 }
 
-func readThermalFile(filePath string) (string, error) {
+func readSysFile(filePath string) (string, error) {
 	absolutePath, err := filepath.Abs(filePath)
 	if err != nil {
 		return "", err
