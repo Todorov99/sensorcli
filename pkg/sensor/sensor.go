@@ -5,7 +5,7 @@ import (
 )
 
 type Sensor struct {
-	ID           string       `json:"id" yaml:"id" mapstructure:"id,omitempty"`
+	ID           int32        `json:"id" yaml:"id" mapstructure:"id,omitempty"`
 	Name         string       `json:"name" yaml:"name" mapstructure:"name,omitempty"`
 	Description  string       `json:"description" yaml:"description" mapstructure:"description,omitempty"`
 	Unit         string       `json:"unit" yaml:"unit" mapstructure:"unit,omitempty"`

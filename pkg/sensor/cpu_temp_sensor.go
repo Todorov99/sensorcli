@@ -18,7 +18,7 @@ const (
 
 type cpuTempSensor struct {
 	cpuTemp         string
-	deviceID        string
+	deviceID        int32
 	sensors         []Sensor
 	thermalFilePath string
 }

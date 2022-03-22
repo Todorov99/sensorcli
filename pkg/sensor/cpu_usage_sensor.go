@@ -20,7 +20,7 @@ type cpuUsageSensor struct {
 	cpuUsage     string
 	cpuCores     string
 	cpuFrequency string
-	deviceID     string
+	deviceID     int32
 	sensors      []Sensor
 }
 

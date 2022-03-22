@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
 	"github.com/Todorov99/sensorcli/pkg/sensor"
-	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,7 +28,17 @@ func NewCpu(sensorGroup map[string]string) Cpu {
 
 func (c *cpuSensor) GetMeasurements(ctx context.Context, device interface{}) ([]sensor.Measurment, error) {
 	d := &sensor.Device{}
-	err := mapstructure.Decode(device, d)
+	// err := mapstructure.Decode(device, d)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	b, err := json.Marshal(device)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, d)
 	if err != nil {
 		return nil, err
 	}
