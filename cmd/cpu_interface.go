@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/Todorov99/sensorcli/pkg/sensor"
+<<<<<<< HEAD
+=======
+	"github.com/mitchellh/mapstructure"
+>>>>>>> origin/master
 	"gopkg.in/yaml.v2"
 )
 
