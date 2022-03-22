@@ -19,7 +19,7 @@ type cpuMemorySensor struct {
 	availableMemory   string
 	usedMemory        string
 	usedPercentMemory string
-	deviceID          string
+	deviceID          int32
 	sensors           []Sensor
 }
 
