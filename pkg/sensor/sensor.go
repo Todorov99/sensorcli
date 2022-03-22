@@ -14,9 +14,7 @@ type Sensor struct {
 }
 
 func (s *Sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
-
 	switch sensorName {
-
 	case cpuTemp:
 		return currentSensorID, nil
 	case cpuUsage:
@@ -33,7 +31,6 @@ func (s *Sensor) getSensorIDAccordingToSensorName(sensorName string, currentSens
 		return currentSensorID, nil
 	case memoryUsedPercent:
 		return currentSensorID, nil
-
 	}
 
 	return "", fmt.Errorf("there is not such sensor name: %q", sensorName)
