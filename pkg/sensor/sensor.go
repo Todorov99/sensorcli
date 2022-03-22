@@ -4,16 +4,16 @@ import (
 	"fmt"
 )
 
-type sensor struct {
-	ID           string       `json:"id" yaml:"id"`
-	Name         string       `json:"name" yaml:"name"`
-	Description  string       `json:"description" yaml:"description"`
-	Unit         string       `json:"unit" yaml:"unit"`
-	SensorGroups []string     `json:"sensorGroups" yaml:"sensorGroups"`
+type Sensor struct {
+	ID           string       `json:"id" yaml:"id" mapstructure:"id,omitempty"`
+	Name         string       `json:"name" yaml:"name" mapstructure:"name,omitempty"`
+	Description  string       `json:"description" yaml:"description" mapstructure:"description,omitempty"`
+	Unit         string       `json:"unit" yaml:"unit" mapstructure:"unit,omitempty"`
+	SensorGroups string       `json:"sensorGroups" yaml:"sensorGroups" mapstructure:"sensorGroups,omitempty"`
 	Measurments  []Measurment `json:"measurements" yaml:"measurements"`
 }
 
-func (s *sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
+func (s *Sensor) getSensorIDAccordingToSensorName(sensorName string, currentSensorID string) (string, error) {
 
 	switch sensorName {
 
