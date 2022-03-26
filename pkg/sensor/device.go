@@ -22,19 +22,13 @@ func (d *Device) GetDeviceID() (int32, error) {
 
 func (d *Device) GetDeviceSensorsByGroup(sensorGroup string) ([]Sensor, error) {
 	sensorLogger.Info("Getting device %q sensors by %q group...", d.Name, sensorGroup)
-	var sensorsIds []Sensor
+	var sensors []Sensor
 
 	for _, currentSensor := range d.Sensors {
 		if currentSensor.SensorGroups == sensorGroup {
-			_, err := currentSensor.getSensorIDAccordingToSensorName(currentSensor.Name, string(currentSensor.ID))
-			if err != nil {
-				sensorLogger.Error(err)
-				return nil, fmt.Errorf("failed to get device sensors by %q group: %w", sensorGroup, err)
-			}
-
-			sensorsIds = append(sensorsIds, currentSensor)
+			sensors = append(sensors, currentSensor)
 		}
 	}
 
-	return sensorsIds, nil
+	return sensors, nil
 }
