@@ -17,6 +17,7 @@ const (
 )
 
 type cpuTempSensor struct {
+	cpuTempUnit     string
 	cpuTemp         string
 	deviceID        int32
 	sensors         []Sensor
@@ -25,7 +26,9 @@ type cpuTempSensor struct {
 
 // CreateTempSensor creates instance of temperature sensor.
 func CreateTempSensor() ISensor {
-	return &cpuTempSensor{}
+	return &cpuTempSensor{
+		cpuTempUnit: "C",
+	}
 }
 
 // GetSensorData gets the temperature sensor data
@@ -95,30 +98,28 @@ func (tempS *cpuTempSensor) getTempMeasurments(ctx context.Context, format strin
 	return newMeasurements(cpuTempInfo)
 }
 
-func (tempS *cpuTempSensor) getTempFromSensor(ctx context.Context) (cpuTempSensor, error) {
+func (tempS cpuTempSensor) getTempFromSensor(ctx context.Context) (cpuTempSensor, error) {
 	sensorLogger.Info("Getting temperature from sensor")
-	tempSensor := cpuTempSensor{}
 
 	if tempS.thermalFilePath != "" {
 		temp, err := readSysFile(tempS.thermalFilePath)
 		if err != nil {
-			return tempSensor, err
+			return tempS, err
 		}
-		tempSensor.cpuTemp = temp
-		return tempSensor, nil
+		tempS.cpuTemp = temp
+		return tempS, nil
 	}
 
 	sensorTeperatureInfo, err := host.SensorsTemperaturesWithContext(ctx)
 	if err != nil {
-		return tempSensor, err
+		return tempS, err
 	}
 
 	cpuTemp := sensorTeperatureInfo[0].Temperature
 	sensorLogger.Info("Temperature from sensor is successfully got")
 
-	return cpuTempSensor{
-		cpuTemp: strconv.FormatFloat(cpuTemp, 'f', 1, 64),
-	}, nil
+	tempS.cpuTemp = strconv.FormatFloat(cpuTemp, 'f', 1, 64)
+	return tempS, nil
 }
 
 func readSysFile(filePath string) (string, error) {

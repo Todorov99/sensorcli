@@ -33,7 +33,7 @@ sensors:
   - id: 5
     name: memoryTotal
     description: Measures memory total RAM
-    unit: Bytes
+    unit: GigaBytes
     sensorGroups: MEMORY_USAGE
     measurements: []
   - id: 6
@@ -44,7 +44,7 @@ sensors:
   - id: 7
     name: memoryUsed
     description: Gets the used RAM from the programs in a provided unit
-    unit: Bytes
+    unit: GigaBytes
     sensorGroups: MEMORY_USAGE
     measurements: []
   - id: 8

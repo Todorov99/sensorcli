@@ -81,6 +81,7 @@ func (r *reportWriter) WritoToXslx(measurements []sensor.Measurment) error {
 		f.SetCellValue(sheetName, "B1", "value")
 		f.SetCellValue(sheetName, "C1", "sensorID")
 		f.SetCellValue(sheetName, "D1", "deviceID")
+		f.SetCellValue(sheetName, "E1", "unit")
 		startingIndex = 2
 	}
 
@@ -89,11 +90,13 @@ func (r *reportWriter) WritoToXslx(measurements []sensor.Measurment) error {
 		valueAxis := fmt.Sprintf("B%d", startingIndex)
 		sensorAxis := fmt.Sprintf("C%d", startingIndex)
 		deviceAxis := fmt.Sprintf("D%d", startingIndex)
+		unitAxis := fmt.Sprintf("E%d", startingIndex)
 
 		f.SetCellValue(sheetName, timeStampAxis, m.MeasuredAt)
 		f.SetCellValue(sheetName, valueAxis, m.Value)
 		f.SetCellValue(sheetName, sensorAxis, m.SensorID)
 		f.SetCellValue(sheetName, deviceAxis, m.DeviceID)
+		f.SetCellValue(sheetName, unitAxis, m.Unit)
 		startingIndex++
 	}
 	f.SetActiveSheet(activeSheetIndex)

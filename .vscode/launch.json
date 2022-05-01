@@ -27,6 +27,27 @@
                 "--password",
                 "Abcd123!@"
             ]
+        },
+        {
+            "name": "Start sensorcli with report",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "args": [
+                "cpu",
+                "--sensor_group",
+                "CPU_TEMP=thermal",
+                "--sensor_group",
+                "CPU_USAGE",
+                "--sensor_group",
+                "MEMORY_USAGE",
+                "--total_duration",
+                "20",
+                "--generateReport",
+                "true"
+                
+            ]
         }
     ]
 }

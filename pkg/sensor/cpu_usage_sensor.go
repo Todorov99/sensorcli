@@ -17,20 +17,27 @@ const (
 )
 
 type cpuUsageSensor struct {
-	cpuUsage     string
-	cpuCores     string
-	cpuFrequency string
-	deviceID     int32
-	sensors      []Sensor
+	cpuUsage         string
+	cpuCores         string
+	cpuFrequency     string
+	cpuUsageUnit     string
+	cpuCoresUnit     string
+	cpuFrequencyUnit string
+	deviceID         int32
+	sensors          []Sensor
 }
 
 // CreateUsageSensor creates instance of usage sensor.
 func CreateUsageSensor() ISensor {
-	return &cpuUsageSensor{}
+	return &cpuUsageSensor{
+		cpuUsageUnit:     "%",
+		cpuCoresUnit:     "count",
+		cpuFrequencyUnit: "GHz",
+	}
 }
 
 func (usageS *cpuUsageSensor) GetSensorData(ctx context.Context, format string) ([]Measurment, error) {
-	return getUsageMeasurements(ctx, format)
+	return usageS.getUsageMeasurements(ctx, format)
 }
 
 func (usageS *cpuUsageSensor) ValidateFormat(format string) error {
@@ -49,10 +56,9 @@ func (usageS *cpuUsageSensor) ValidateUnit() error {
 	usageS.sensors = currentDeviceSensors
 
 	for _, currentSensor := range usageS.sensors {
-		if currentSensor.Unit != "GHz" &&
-			currentSensor.Unit != "%" &&
-			currentSensor.Unit != "count" &&
-			currentSensor.Unit != "Hz" {
+		if currentSensor.Unit != usageS.cpuCoresUnit &&
+			currentSensor.Unit != usageS.cpuFrequencyUnit &&
+			currentSensor.Unit != usageS.cpuUsageUnit {
 			err = multierror.Append(err, fmt.Errorf("invalid cpu usage unit %q", currentSensor.Unit))
 		}
 	}
@@ -63,7 +69,7 @@ func (usageS *cpuUsageSensor) ValidateUnit() error {
 func (usageS *cpuUsageSensor) SetSysInfoFile(filepath string) {
 }
 
-func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, error) {
+func (usageS cpuUsageSensor) getUsageMeasurements(ctx context.Context, format string) ([]Measurment, error) {
 	sensorLogger.Info("Getting usage sensor measurements...")
 
 	deviceID, err := device.GetDeviceID()
@@ -76,7 +82,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, err
 		return nil, err
 	}
 
-	cpuInfo, err := newCPUUsageInfo(ctx)
+	cpuInfo, err := usageS.newCPUUsageInfo(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cpuInfo: %w", err)
 	}
@@ -87,7 +93,7 @@ func getUsageMeasurements(ctx context.Context, format string) ([]Measurment, err
 	return newMeasurements(cpuInfo)
 }
 
-func newCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
+func (usageS cpuUsageSensor) newCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
 	cores, frequency, err := getCPUCoresAndFrequency(ctx)
 	if err != nil {
 		return cpuUsageSensor{}, err
@@ -98,11 +104,10 @@ func newCPUUsageInfo(ctx context.Context) (cpuUsageSensor, error) {
 		return cpuUsageSensor{}, err
 	}
 
-	return cpuUsageSensor{
-		cpuCores:     cores,
-		cpuFrequency: frequency,
-		cpuUsage:     usage,
-	}, nil
+	usageS.cpuCores = cores
+	usageS.cpuFrequency = frequency
+	usageS.cpuUsage = usage
+	return usageS, nil
 }
 
 func getCPUCoresAndFrequency(ctx context.Context) (string, string, error) {
