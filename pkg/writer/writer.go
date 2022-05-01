@@ -57,8 +57,8 @@ func (r *reportWriter) WriteOutputToCSV(data []string) error {
 
 // WritoToXslx writes sensor measurement data into Xslx file
 func (r *reportWriter) WritoToXslx(measurements []sensor.Measurment) error {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	var f *excelize.File
 	f, err := excelize.OpenFile(r.file)
 	if errors.Is(err, os.ErrNotExist) {
@@ -75,7 +75,7 @@ func (r *reportWriter) WritoToXslx(measurements []sensor.Measurment) error {
 		return err
 	}
 
-	startingIndex := len(rows)
+	startingIndex := len(rows) + 1
 	if startingIndex == 0 {
 		f.SetCellValue(sheetName, "A1", "measuredAt")
 		f.SetCellValue(sheetName, "B1", "value")

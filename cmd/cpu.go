@@ -137,6 +137,7 @@ func terminateForTotalDuration(ctx context.Context) error {
 			cmdLogger.Error(ctx.Err())
 			return ctx.Err()
 		case <-appTerminaitingDuration:
+			wg.Wait()
 			return nil
 		default:
 			multipleSensorsData, err := cpu.GetMeasurements(ctx, device)
@@ -185,42 +186,42 @@ func getMeasurementsInDeltaDuration(ctx context.Context, reportWriter writer.Rep
 
 	apiClient := client.NewAPIClient(ctx, webHook, username, password)
 
+	if generateReport {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if reportType == "xlsx" {
+				err := reportWriter.WritoToXslx(sensorData)
+				if err != nil {
+					errChan <- fmt.Errorf("error during writing in XLSX file: %w", err)
+					return
+				}
+			}
+
+			if reportType == "csv" {
+				var sensorsData []string
+				sensorsData = append(sensorsData, util.ParseDataAccordingToFormat(format, sensorData))
+				err := reportWriter.WriteOutputToCSV(sensorsData)
+				if err != nil {
+					errChan <- fmt.Errorf("error during writing in CSV file: %w", err)
+					return
+				}
+			}
+		}()
+	}
+
 	for {
 		select {
 		case data := <-sensorsData:
 			if webHook != "" {
 				wg.Add(1)
 				go func() {
+					defer wg.Done()
 					resp := apiClient.SendMetrics(ctx, username, password, data)
 					if resp.Err != nil {
 						errChan <- resp.Err
 						return
 					}
-					wg.Done()
-				}()
-			}
-
-			if generateReport {
-				wg.Add(1)
-				go func() {
-					if reportType == "xlsx" {
-						err := reportWriter.WritoToXslx(sensorData)
-						if err != nil {
-							errChan <- fmt.Errorf("error during writing in XLSX file: %w", err)
-							return
-						}
-					}
-
-					if reportType == "csv" {
-						var sensorsData []string
-						sensorsData = append(sensorsData, util.ParseDataAccordingToFormat(format, data))
-						err := reportWriter.WriteOutputToCSV(sensorsData)
-						if err != nil {
-							errChan <- fmt.Errorf("error during writing in CSV file: %w", err)
-							return
-						}
-					}
-					wg.Done()
 				}()
 			}
 
