@@ -21,7 +21,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Todorov99/sensorcli/pkg/client"
@@ -44,8 +43,6 @@ var (
 	reportType     string
 	configFilePath string
 )
-
-var wg sync.WaitGroup
 
 // cpuCmd represents the cpu command
 var cpuCmd = &cobra.Command{
@@ -137,7 +134,6 @@ func terminateForTotalDuration(ctx context.Context) error {
 			cmdLogger.Error(ctx.Err())
 			return ctx.Err()
 		case <-appTerminaitingDuration:
-			wg.Wait()
 			return nil
 		default:
 			multipleSensorsData, err := cpu.GetMeasurements(ctx, device)
@@ -181,15 +177,13 @@ func getMeasurementsInDeltaDuration(ctx context.Context, reportWriter writer.Rep
 
 	defer func() {
 		close(done)
-		close(errChan)
 	}()
 
 	apiClient := client.NewAPIClient(ctx, webHook, username, password)
 
 	if generateReport {
-		wg.Add(1)
+
 		go func() {
-			defer wg.Done()
 			if reportType == "xlsx" {
 				err := reportWriter.WritoToXslx(sensorData)
 				if err != nil {
@@ -214,9 +208,7 @@ func getMeasurementsInDeltaDuration(ctx context.Context, reportWriter writer.Rep
 		select {
 		case data := <-sensorsData:
 			if webHook != "" {
-				wg.Add(1)
 				go func() {
-					defer wg.Done()
 					resp := apiClient.SendMetrics(ctx, username, password, data)
 					if resp.Err != nil {
 						errChan <- resp.Err
@@ -226,7 +218,6 @@ func getMeasurementsInDeltaDuration(ctx context.Context, reportWriter writer.Rep
 			}
 
 			fmt.Println(util.ParseDataAccordingToFormat(format, data))
-			wg.Wait()
 		case <-measurementDuration:
 			done <- true
 			return nil
