@@ -21,6 +21,7 @@ type cpuTempSensor struct {
 	cpuTemp         string
 	deviceID        int32
 	sensors         []Sensor
+	group           string
 	thermalFilePath string
 }
 
@@ -28,6 +29,7 @@ type cpuTempSensor struct {
 func CreateTempSensor() ISensor {
 	return &cpuTempSensor{
 		cpuTempUnit: "C",
+		group:       tempSensor,
 	}
 }
 
@@ -57,7 +59,7 @@ func (tempS *cpuTempSensor) SetSysInfoFile(filepath string) {
 
 func (tempS *cpuTempSensor) ValidateUnit() error {
 	sensorLogger.Info("Validating temperature sensor units...")
-	var err error
+	var merr error
 
 	currentDeviceSensors, err := device.GetDeviceSensorsByGroup(tempSensor)
 	if err != nil {
@@ -67,12 +69,16 @@ func (tempS *cpuTempSensor) ValidateUnit() error {
 	tempS.sensors = currentDeviceSensors
 
 	for _, currentSensor := range tempS.sensors {
-		if currentSensor.Unit != "F" && currentSensor.Unit != "C" {
-			err = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		if currentSensor.Unit != tempS.cpuTempUnit {
+			merr = multierror.Append(err, fmt.Errorf("invalid temperature unit %q", currentSensor.Unit))
+		}
+
+		if currentSensor.SensorGroups != tempS.group {
+			merr = multierror.Append(err, fmt.Errorf("invalid temperature sensor group %q", currentSensor.SensorGroups))
 		}
 	}
 
-	return err
+	return merr
 }
 
 func (tempS *cpuTempSensor) getTempMeasurments(ctx context.Context, format string, filePath ...string) ([]Measurment, error) {

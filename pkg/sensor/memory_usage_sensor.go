@@ -24,6 +24,7 @@ type cpuMemorySensor struct {
 	usedMemoryUnit        string
 	usedPercentMemoryUnit string
 	deviceID              int32
+	group                 string
 	sensors               []Sensor
 }
 
@@ -34,6 +35,7 @@ func CreateMemorySensor() ISensor {
 		availableMemoryUnit:   "GigaBytes",
 		usedMemoryUnit:        "GigaBytes",
 		usedPercentMemoryUnit: "%",
+		group:                 memorySensor,
 	}
 }
 
@@ -55,7 +57,7 @@ func (memoryS *cpuMemorySensor) ValidateFormat(format string) error {
 
 func (memoryS *cpuMemorySensor) ValidateUnit() error {
 	sensorLogger.Info("Validating memory sensor units...")
-	var err error
+	var merr error
 
 	currentDeviceSensors, err := device.GetDeviceSensorsByGroup(memorySensor)
 	if err != nil {
@@ -65,14 +67,18 @@ func (memoryS *cpuMemorySensor) ValidateUnit() error {
 	memoryS.sensors = currentDeviceSensors
 
 	for _, currentSensor := range memoryS.sensors {
-		if currentSensor.Unit != "MegaBytes" &&
-			currentSensor.Unit != "%" && currentSensor.Unit != "Bytes" &&
-			currentSensor.Unit != "Kilobytes" && currentSensor.Unit != "GigaBytes" {
-			err = multierror.Append(err, fmt.Errorf("invalid memory unit: %q", currentSensor.Unit))
+		if currentSensor.Unit != memoryS.totalMemoryUnit &&
+			currentSensor.Unit != memoryS.usedMemoryUnit && currentSensor.Unit != memoryS.availableMemoryUnit &&
+			currentSensor.Unit != memoryS.usedPercentMemoryUnit {
+			merr = multierror.Append(err, fmt.Errorf("invalid memory unit: %q", currentSensor.Unit))
+		}
+
+		if currentSensor.SensorGroups != memoryS.group {
+			merr = multierror.Append(err, fmt.Errorf("invalid memory sensor group %q", currentSensor.SensorGroups))
 		}
 	}
 
-	return err
+	return merr
 }
 
 func (memoryS *cpuMemorySensor) SetSysInfoFile(filepath string) {

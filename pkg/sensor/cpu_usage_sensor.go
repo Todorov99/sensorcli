@@ -24,6 +24,7 @@ type cpuUsageSensor struct {
 	cpuCoresUnit     string
 	cpuFrequencyUnit string
 	deviceID         int32
+	group            string
 	sensors          []Sensor
 }
 
@@ -33,6 +34,7 @@ func CreateUsageSensor() ISensor {
 		cpuUsageUnit:     "%",
 		cpuCoresUnit:     "count",
 		cpuFrequencyUnit: "GHz",
+		group:            usageSensor,
 	}
 }
 
@@ -46,7 +48,7 @@ func (usageS *cpuUsageSensor) ValidateFormat(format string) error {
 
 func (usageS *cpuUsageSensor) ValidateUnit() error {
 	sensorLogger.Info("Validating usage sensor units...")
-	var err error
+	var merr error
 
 	currentDeviceSensors, err := device.GetDeviceSensorsByGroup(usageSensor)
 	if err != nil {
@@ -59,11 +61,15 @@ func (usageS *cpuUsageSensor) ValidateUnit() error {
 		if currentSensor.Unit != usageS.cpuCoresUnit &&
 			currentSensor.Unit != usageS.cpuFrequencyUnit &&
 			currentSensor.Unit != usageS.cpuUsageUnit {
-			err = multierror.Append(err, fmt.Errorf("invalid cpu usage unit %q", currentSensor.Unit))
+			merr = multierror.Append(err, fmt.Errorf("invalid cpu usage unit %q", currentSensor.Unit))
+		}
+
+		if currentSensor.SensorGroups != usageS.group {
+			merr = multierror.Append(err, fmt.Errorf("invalid usage sensor group %q", currentSensor.SensorGroups))
 		}
 	}
 
-	return err
+	return merr
 }
 
 func (usageS *cpuUsageSensor) SetSysInfoFile(filepath string) {
