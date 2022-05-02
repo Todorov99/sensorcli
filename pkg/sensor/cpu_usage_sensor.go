@@ -3,6 +3,7 @@ package sensor
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -119,14 +120,14 @@ func getCPUCoresAndFrequency(ctx context.Context) (string, string, error) {
 	var cpuInfo []cpu.InfoStat
 	var err error
 
-	// if runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
-	// 	cpuInfo, err = darwinArm64InfoWithContext(ctx)
-	// 	if err != nil {
-	// 		return "", "", fmt.Errorf("error getting cpu cores and frequency on darwin arm64: %w", err)
-	// 	}
+	if runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
+		cpuInfo, err = darwinArm64InfoWithContext(ctx)
+		if err != nil {
+			return "", "", fmt.Errorf("error getting cpu cores and frequency on darwin arm64: %w", err)
+		}
 
-	// 	return strconv.FormatInt(int64(cpuInfo[0].Cores), 10), strconv.FormatFloat(cpuInfo[0].Mhz, 'f', 2, 64), nil
-	// }
+		return strconv.FormatInt(int64(cpuInfo[0].Cores), 10), strconv.FormatFloat(cpuInfo[0].Mhz, 'f', 2, 64), nil
+	}
 
 	cpuInfo, err = cpu.InfoWithContext(ctx)
 	if err != nil {
