@@ -1,3 +1,4 @@
 *.log
 *sensorcli
 thermal
+.DS_Store
