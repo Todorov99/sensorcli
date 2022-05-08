@@ -79,18 +79,21 @@ func getSensorMeasurements(ctx context.Context, sensorGroup, sensorSysFile strin
 func loadDeviceConfig(cfgDirPath string) (*sensor.Device, error) {
 	cmdLogger.Debugf("Loading device config...")
 	cfgFileName := ""
-	if cfgDirPath == "" {
+
+	if cfgDirPath == "" && webHook == "" {
 		fileName, err := filepath.Abs("./device_cfg.yaml")
 		if err != nil {
 			return nil, err
 		}
 		cfgFileName = fileName
-	} else {
+	} else if webHook != "" && cfgDirPath != "" {
 		cfgFileName = cfgDirPath + "/device_cfg.yaml"
-		err := verifyCheckSum(cfgFileName, cfgDirPath+"/.checksum")
+		err := verifyChecksum(cfgFileName, cfgDirPath+"/.checksum")
 		if err != nil {
 			return nil, err
 		}
+	} else if cfgDirPath != "" {
+		cfgFileName = cfgDirPath + "/device_cfg.yaml"
 	}
 
 	yamlFile, err := ioutil.ReadFile(cfgFileName)
@@ -107,10 +110,10 @@ func loadDeviceConfig(cfgDirPath string) (*sensor.Device, error) {
 	return device, nil
 }
 
-func verifyCheckSum(cfgFilePath, checkSumPath string) error {
+func verifyChecksum(cfgFilePath, checkSumPath string) error {
 	checkSumHashBytes, err := os.ReadFile(checkSumPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("config file has been changes. Get new config from the API and DO NOT change it")
 	}
 
 	f, err := os.Open(cfgFilePath)
