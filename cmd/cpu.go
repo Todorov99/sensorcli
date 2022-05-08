@@ -148,7 +148,7 @@ func terminateForTotalDuration(ctx context.Context) error {
 			return ctx.Err()
 		case <-appTerminaitingDuration:
 			if mailHook != "" {
-				mailSenderClient := client.NewMailSenderClient(mailHook, rootCAPath)
+				mailSenderClient := client.NewMailSenderTLSClient(mailHook, rootCAPath)
 				sender := client.MailSender{
 					Subject: "Measurements from the CLI",
 					To: []string{
@@ -213,7 +213,7 @@ func getMeasurementsInDeltaDuration(ctx context.Context, reportWriter writer.Rep
 		close(done)
 	}()
 
-	apiClient := client.NewAPIClient(ctx, webHook, rootCAPath)
+	apiClient := client.NewAPITLSClient(ctx, webHook, rootCAPath)
 
 	if generateReport {
 
